@@ -96,6 +96,8 @@ function defaultOpts() {
     collapseRepeats: false,
     stats: false,
     statsInterval: 10,
+    jsonFilters: [],
+    jsonKeepNonJson: false,
   };
 }
 
@@ -235,6 +237,12 @@ function parseArgs(argv) {
             if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --stats interval: ${inline}`);
             opts.statsInterval = n;
           }
+          break;
+        case 'json-filter':
+          opts.jsonFilters.push(consumeValue('--json-filter', inline));
+          break;
+        case 'json-keep-non-json':
+          opts.jsonKeepNonJson = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

@@ -73,6 +73,12 @@ Filter & display (v0.2):
       --stats[=N]          every N seconds (default 10) print to stderr a
                            summary: total lines, errors, warnings, recent
                            lines/sec, top files. Final summary on exit.
+      --json-filter=EXPR   keep only JSONL lines that match EXPR (repeatable;
+                           combined as AND). EXPR: key=val, key!=val, key>=N,
+                           key>N, key<=N, key<N, key~regex, key!~regex, or
+                           just 'key' to require existence. Dot-paths for
+                           nested (user.role=admin). Non-JSON lines dropped.
+      --json-keep-non-json with --json-filter, pass non-JSON lines through
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

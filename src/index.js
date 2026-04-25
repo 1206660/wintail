@@ -22,6 +22,7 @@ const { createTeeOutput } = require('./multiOut.js');
 const { makeStripAnsi } = require('./transforms/stripAnsi.js');
 const { makeCollapseRepeats } = require('./transforms/collapseRepeats.js');
 const { createStatsCollector } = require('./transforms/stats.js');
+const { makeJsonFilter } = require('./transforms/jsonFilter.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -48,6 +49,15 @@ function buildPipeline(opts, stdout, stderr) {
       transforms.push(makeSinceFilter({
         since: opts.since !== null ? opts.since : undefined,
         until: opts.until !== null ? opts.until : undefined,
+      }));
+    } catch (e) { throw new UsageError(e.message); }
+  }
+
+  if (opts.jsonFilters.length > 0) {
+    try {
+      transforms.push(makeJsonFilter({
+        specs: opts.jsonFilters,
+        keepNonJson: opts.jsonKeepNonJson,
       }));
     } catch (e) { throw new UsageError(e.message); }
   }
