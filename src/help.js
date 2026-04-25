@@ -41,6 +41,13 @@ Mandatory arguments to long options are mandatory for short options too.
                            (JSON). On next invocation with the same FILE,
                            resume from the saved offset (skip already-seen
                            lines). Auto-saved every 2s and on clean exit.
+      --unique             drop lines previously seen in this stream
+                           (per source). Capped at 100k unique keys.
+      --exec=CMD           for each line reaching this point, spawn shell
+                           CMD with $WINTAIL_LINE and $WINTAIL_SOURCE in env.
+                           {} in CMD is replaced with the line literal.
+                           Pair with --grep so it only fires on matches.
+      --exec-concurrent=N  max in-flight --exec children (default 4)
       --plugin=PATH        load a custom JS transform from PATH (CommonJS).
                            Module exports: function(line, ctx) ⇒ string|null,
                            or { transform }, or array of functions.

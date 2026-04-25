@@ -48,6 +48,8 @@ const { emitDiff } = require('./diff.js');
 const { loadPlugins } = require('./plugin.js');
 const { reverseBuffer } = require('./transforms/reverse.js');
 const { loadCheckpoint, applyToStates, startFlusher } = require('./checkpoint.js');
+const { makeExec } = require('./transforms/exec.js');
+const { makeUnique } = require('./transforms/unique.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -99,6 +101,16 @@ function buildPipeline(opts, stdout, stderr) {
   if (opts.plugins.length > 0) {
     try { transforms.push(...loadPlugins(opts.plugins)); }
     catch (e) { throw new UsageError(e.message); }
+  }
+
+  if (opts.unique) transforms.push(makeUnique());
+
+  if (opts.exec) {
+    transforms.push(makeExec({
+      command: opts.exec,
+      maxConcurrent: opts.execConcurrent,
+      stderr,
+    }));
   }
 
   if (opts.regexExtract) {

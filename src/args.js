@@ -148,6 +148,9 @@ function defaultOpts() {
     plugins: [],
     reverse: false,
     checkpoint: null,
+    exec: null,
+    execConcurrent: 4,
+    unique: false,
   };
 }
 
@@ -467,6 +470,19 @@ function parseArgs(argv, baseOpts = null) {
           break;
         case 'checkpoint':
           opts.checkpoint = consumeValue('--checkpoint', inline);
+          break;
+        case 'exec':
+          opts.exec = consumeValue('--exec', inline);
+          break;
+        case 'exec-concurrent': {
+          const v = consumeValue('--exec-concurrent', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 1) throw new UsageError(`invalid --exec-concurrent: ${v}`);
+          opts.execConcurrent = n;
+          break;
+        }
+        case 'unique':
+          opts.unique = true;
           break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
