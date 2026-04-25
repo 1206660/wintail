@@ -120,6 +120,8 @@ function defaultOpts() {
     maxLines: 0,
     prefix: null,
     mark: 0,
+    web: null,
+    webToken: null,
   };
 }
 
@@ -294,6 +296,12 @@ function parseArgs(argv) {
         case 'mark':
           opts.mark = inline === undefined ? 60 : Number(inline);
           if (!Number.isFinite(opts.mark) || opts.mark < 0) throw new UsageError(`invalid --mark interval: ${inline}`);
+          break;
+        case 'web':
+          opts.web = consumeValue('--web', inline);
+          break;
+        case 'web-token':
+          opts.webToken = consumeValue('--web-token', inline);
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

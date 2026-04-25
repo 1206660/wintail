@@ -77,6 +77,11 @@ Filter & display (v0.2):
       --mark[=N]           with -f, every N seconds (default 60) print a
                            visual time separator to stderr. Aids orientation
                            in long live tails.
+      --web=SPEC           expose live tail in a browser. SPEC is :PORT (binds
+                           127.0.0.1) or HOST:PORT. Page has filter / pause /
+                           autoscroll / clear. ANSI colors translated to HTML.
+      --web-token=TOKEN    require ?token=TOKEN to access. Mandatory when
+                           --web binds to a non-loopback address.
       --save=FILE          tee output to FILE in addition to stdout. ANSI
                            codes are stripped from the file. Overwrites.
       --save-append=FILE   like --save but appends to FILE if it exists.

@@ -28,6 +28,7 @@ const { makeRegexExtract } = require('./transforms/regexExtract.js');
 const { makeMaxLines } = require('./transforms/maxLines.js');
 const { makePrefix } = require('./transforms/prefix.js');
 const { startMarker } = require('./marker.js');
+const { createWebServer, makeWebTee } = require('./web.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -199,6 +200,24 @@ async function main(argv, {
     }
   }
 
+  // Wrap with web-tee if --web (server starts and stays up while wintail runs)
+  let webServer = null;
+  if (opts.web) {
+    try {
+      const title = opts.files.filter(f => f !== '-').join(', ') || 'stdin';
+      webServer = await createWebServer({
+        bind: opts.web,
+        token: opts.webToken,
+        title,
+        stderr,
+      });
+    } catch (e) {
+      stderr.write(`wintail: ${e.message}\n`);
+      process.exit(1);
+    }
+    outputTarget = makeWebTee(outputTarget, webServer);
+  }
+
   let pipeline;
   try { pipeline = buildPipeline(opts, outputTarget, stderr); }
   catch (e) {
@@ -292,6 +311,13 @@ async function main(argv, {
 
   pipeline.flush();
   if (pipeline.statsCollector) pipeline.statsCollector.report();
+  // If --web was set without -f, keep the server alive so the user can browse
+  // the captured snapshot until they Ctrl-C.
+  if (webServer) {
+    stderr.write('wintail: snapshot ready — press Ctrl-C to exit\n');
+    process.on('SIGINT', () => process.exit(130));
+    return;
+  }
   if (exitCode !== 0) process.exit(exitCode);
 }
 
