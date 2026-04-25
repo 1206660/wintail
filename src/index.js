@@ -47,6 +47,7 @@ const { makeLimitBytes } = require('./transforms/limitBytes.js');
 const { emitDiff } = require('./diff.js');
 const { loadPlugins } = require('./plugin.js');
 const { reverseBuffer } = require('./transforms/reverse.js');
+const { loadCheckpoint, applyToStates, startFlusher } = require('./checkpoint.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -466,6 +467,19 @@ async function main(argv, {
   }
 
   if (opts.follow && followStates.length > 0) {
+    // Apply checkpoint before starting follow so initial-print logic
+    // already happened; we only adjust offsets for the follow loop.
+    let checkpointFlusher = null;
+    if (opts.checkpoint) {
+      const cp = loadCheckpoint(opts.checkpoint);
+      applyToStates(followStates, cp, { stderr });
+      checkpointFlusher = startFlusher({
+        filePath: opts.checkpoint,
+        getStates: () => followStates,
+      });
+      const origExit = process.exit;
+      process.on('exit', () => { try { checkpointFlusher.stop(); } catch {} });
+    }
     if (pipeline.statsCollector) pipeline.statsCollector.start();
     let marker = null;
     if (opts.mark > 0) {

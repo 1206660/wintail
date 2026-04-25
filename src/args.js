@@ -147,6 +147,7 @@ function defaultOpts() {
     limitBytes: 0,
     plugins: [],
     reverse: false,
+    checkpoint: null,
   };
 }
 
@@ -463,6 +464,9 @@ function parseArgs(argv, baseOpts = null) {
           break;
         case 'reverse':
           opts.reverse = true;
+          break;
+        case 'checkpoint':
+          opts.checkpoint = consumeValue('--checkpoint', inline);
           break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded

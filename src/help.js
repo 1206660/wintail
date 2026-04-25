@@ -37,6 +37,10 @@ Mandatory arguments to long options are mandatory for short options too.
       --reverse            print collected lines newest-first. Combine with
                            -n N for "last N, newest first". Only meaningful
                            in non-follow mode.
+      --checkpoint=FILE    with -f/-F, persist per-file offsets to FILE
+                           (JSON). On next invocation with the same FILE,
+                           resume from the saved offset (skip already-seen
+                           lines). Auto-saved every 2s and on clean exit.
       --plugin=PATH        load a custom JS transform from PATH (CommonJS).
                            Module exports: function(line, ctx) ⇒ string|null,
                            or { transform }, or array of functions.
