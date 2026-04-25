@@ -119,6 +119,7 @@ function defaultOpts() {
     regexExtractKeepNonMatch: false,
     maxLines: 0,
     prefix: null,
+    mark: 0,
   };
 }
 
@@ -289,6 +290,10 @@ function parseArgs(argv) {
           break;
         case 'prefix':
           opts.prefix = consumeValue('--prefix', inline);
+          break;
+        case 'mark':
+          opts.mark = inline === undefined ? 60 : Number(inline);
+          if (!Number.isFinite(opts.mark) || opts.mark < 0) throw new UsageError(`invalid --mark interval: ${inline}`);
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

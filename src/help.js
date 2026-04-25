@@ -74,6 +74,9 @@ Filter & display (v0.2):
                            {source} = file path, {time} = HH:MM:SS. Pairs
                            well with multi-file -f instead of headers.
                            Example: --prefix='[{source}] '
+      --mark[=N]           with -f, every N seconds (default 60) print a
+                           visual time separator to stderr. Aids orientation
+                           in long live tails.
       --save=FILE          tee output to FILE in addition to stdout. ANSI
                            codes are stripped from the file. Overwrites.
       --save-append=FILE   like --save but appends to FILE if it exists.

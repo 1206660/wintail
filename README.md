@@ -1,154 +1,206 @@
 # wintail
 
-Linux-style `tail` for PowerShell and Windows, plus color, grep, glob, toast notifications. Zero dependencies. `npx`-installable.
+`tail` for PowerShell and Windows. Behaves like GNU `tail` but adds color, grep, JSON filtering, time-window slicing, Unreal Engine log mode, Windows toast notifications, and 25+ other flags. **Zero dependencies, single `npx` command.**
 
-PowerShell's built-in `Get-Content -Wait -Tail` is slow on big logs, doesn't follow log rotation, and feels nothing like `tail`. `wintail` is the `tail` you already know — `tail -f`, `tail -F`, `tail -n 100`, multi-file headers — plus a small set of log-reading ergonomics that GNU tail leaves to other tools (`grep`, `less -R`, custom shell pipes).
+```powershell
+npx github:1206660/wintail app.log              # last 10 lines
+npx github:1206660/wintail -F -G ERROR app.log  # follow, only errors, in red
+```
+
+PowerShell's built-in `Get-Content -Wait -Tail` is slow on big logs, doesn't follow log rotation, and lacks every feature you reach for from real `tail`. `wintail` is the `tail` you already know — `tail -f`, `tail -F`, `tail -n 100`, multi-file headers — and then 30+ more flags for live log reading.
+
+---
 
 ## Install
 
-No install needed:
-
 ```powershell
-# from npm (after publish)
-npx wintail app.log
-
-# directly from GitHub, no publish required
+# zero-install (recommended for one-off use)
 npx github:1206660/wintail app.log
-```
 
-Global install:
-
-```powershell
+# global install
 npm install -g wintail
 wintail app.log
-```
 
-Requires Node.js 18+.
-
-## Make `tail` work in PowerShell
-
-Once:
-
-```powershell
+# in PowerShell, make `tail` work like Linux:
 wintail --install-alias
+# (then open a new shell — `tail file.log` now calls wintail)
 ```
 
-This appends `Set-Alias tail wintail` to your PowerShell `$PROFILE.CurrentUserAllHosts` (idempotent, runs for both `pwsh` and `powershell` if installed). Open a new shell and `tail file.log` works.
+Requires **Node.js ≥ 18**. Node 22+ for glob expansion of `*.log` style args.
 
-Prefer to add it manually:
+---
 
-```powershell
-Add-Content $PROFILE.CurrentUserAllHosts 'Set-Alias tail wintail'
-```
+## What it does
 
-## Usage
+### GNU tail compatibility (the basics)
 
-```
-wintail [OPTION]... [FILE]...
-```
-
-| Flag | Meaning |
+| | |
 |---|---|
-| `-n N` / `--lines=N` | Last N lines (default 10) |
-| `-n +N` | Print starting at line N (1-indexed) |
-| `-c N` / `--bytes=N` | Last N bytes |
-| `-c +N` | Starting at byte N |
-| `-f` / `--follow` | Follow appended data (file descriptor) |
-| `-F` | Follow by name; survives log rotation and truncation |
-| `-q` / `--quiet` | Never print `==> FILE <==` headers |
-| `-v` / `--verbose` | Always print headers |
-| `-s SECS` | Polling interval for `-f` (default 1.0) |
-| `--pid=PID` | With `-f`, exit when PID dies |
-| `--encoding=ENC` | `utf8` (default), `utf16le`, `latin1`, `ascii`. UTF-8 / UTF-16 BOMs are auto-detected. |
-| `--install-alias` | Add `Set-Alias tail wintail` to your PowerShell profile |
-| `-h` / `--help` | Help |
-| `-V` / `--version` | Version |
+| `wintail file` | Last 10 lines |
+| `wintail -n 50 file` | Last 50 lines |
+| `wintail -n +100 file` | From line 100 to end |
+| `wintail -c 1k file` | Last 1024 bytes |
+| `wintail -f file` | Follow appends (Ctrl-C to stop) |
+| `wintail -F file` | Follow by name — survives log rotation |
+| `wintail a.log b.log` | Multi-file with `==> name <==` headers |
+| `Get-Content big.log \| wintail -n 5` | From a pipe |
+| `wintail --pid 1234 -f file` | Stop following when PID dies |
+| `wintail -s 0.5 -f file` | Polling interval (default 1s) |
+| `wintail --encoding=utf16le file` | UTF-16LE input (BOMs auto-detected) |
 
-**Filter & display (v0.2)**
+### Color & highlighting
 
-| Flag | Meaning |
+| | |
 |---|---|
-| `-G PAT` / `--grep=PAT` | Only show lines matching regex (repeatable; combine for AND… no, OR within `-G` and AND between `-G` and `--grep-v`) |
+| `--color={auto,always,never}` | Default `auto` (TTY + no `NO_COLOR`) |
+| Built-in highlights | `ERROR`/`Fatal`/`panic` red bold, `WARN` yellow, `INFO` cyan, `DEBUG`/`Verbose` dim |
+| `--highlight=PAT=COLOR` | Custom highlight (repeatable). `'panic=red bold'`, `'TODO=yellow'` |
+| `--no-default-highlight` | Disable built-ins |
+| `--no-color` / `--color=never` | Strip all colors |
+
+### Filter
+
+| | |
+|---|---|
+| `-G PAT` / `--grep=PAT` | Keep matching lines (repeatable, OR by default) |
+| `--grep-and` | Require ALL `--grep` patterns to match (AND) |
 | `--grep-v=PAT` | Drop matching lines (repeatable) |
-| `-i` / `--ignore-case` | Case-insensitive `--grep` / `--grep-v` |
-| `-N` / `--line-number` | Prefix each line with its 1-based number |
-| `--color={auto,always,never}` | Default `auto` (TTY + no `NO_COLOR`). `--no-color` = `never`. |
-| `--highlight=PAT=COLOR` | Wrap regex matches in ANSI color (repeatable). COLOR: `red green yellow blue magenta cyan white dim bold`, combine with space (`'red bold'`) |
-| `--no-default-highlight` | Disable built-in `ERROR`→red, `WARN`→yellow, `INFO`→cyan, `DEBUG`→dim |
-| `--notify-on=PAT[=TITLE]` | Windows toast on match (repeatable; throttled 1/pattern/5s) |
+| `-i` / `--ignore-case` | Case-insensitive grep |
+| `--include-from=FILE` | Load `--grep` patterns from file (one per line, `#` for comments) |
+| `--exclude-from=FILE` | Same, for `--grep-v` |
+| `--since=SPEC` | Drop lines older than SPEC. `5m`, `1h`, `2d`, `10:30`, ISO 8601, UE `[YYYY.MM.DD-HH.MM.SS:ms]`. Multi-line stack traces inherit the previous line's timestamp. |
+| `--until=SPEC` | Drop lines newer than SPEC. Combine for windows. |
 
-`N` accepts multipliers: `b` (512), `k` (1024), `K` (1024), `M` (1024²), `G` (1024³).
+### Transform
 
-When `FILE` is `-` or omitted, reads stdin.
+| | |
+|---|---|
+| `-N` / `--line-number` | Prefix `123\t` (per source) |
+| `--prefix=TEMPLATE` | Prefix every line. `{source}` `{time}` substitutions. |
+| `--add-timestamp[=FMT]` | Wall-clock time prefix. FMT: `time` (HH:MM:SS), `iso`, `epoch`, `epoch-ms` |
+| `--strip-ansi` | Remove existing escape codes from input |
+| `--collapse-repeats` | Suppress consecutive duplicates with `[wintail: previous line repeated N times]` summary |
+| `--truncate[=N]` | Truncate to N visible chars (default = terminal width) with `…`. ANSI-aware. |
+| `--regex-extract=PAT` | Emit only captured groups (or full match if no groups). Drops non-matching lines. |
+| `--regex-extract-keep-non-match` | Pass through non-matches |
+| `--max-lines=N` | Emit at most N lines (post-filter) then exit |
 
-## Examples
+### JSONL logs
+
+| | |
+|---|---|
+| `--pretty-json` | Detect JSON lines and pretty-print with 2-space indent |
+| `--json-filter=EXPR` | Keep matching JSON lines. EXPR: `key=val`, `key!=val`, `key>=N`, `key>N`, `key<=N`, `key<N`, `key~regex`, `key!~regex`, or just `key` to require existence. Dot-paths: `user.role=admin`. Repeatable (AND). |
+| `--json-extract=SPEC` | Project to clean text. Either comma paths (`level,msg,user.id`) or template (`'[{ts}] [{level}] {msg}'`) |
+| `--json-keep-non-json` | Don't drop non-JSON lines |
+
+### Unreal Engine
+
+| | |
+|---|---|
+| `--ue` | UE log mode: parse `[ts][frame]Channel: [Severity: ]Message`. Color each Channel deterministically (12-color palette via stable hash). Severity: Error red bold, Fatal magenta bold, Warning yellow, Verbose dim. Indented continuation lines (stack frames) dimmed. |
+
+Combine with everything: `wintail -F --ue -G LogTemp Saved/Logs/MyGame.log`
+
+### Output / capture
+
+| | |
+|---|---|
+| `--save=FILE` | Tee output to FILE (ANSI stripped by default) |
+| `--save-append=FILE` | Same but append to existing file |
+| `--stats[=N]` | Every N seconds (default 10), print to stderr: total lines, errors, warnings, recent + average lines/sec, top 3 files. Final summary on exit. |
+| `--mark[=N]` | With `-f`, periodic visual time separator to stderr (default every 60s). Aids orientation in long tails. |
+
+### Files & glob
+
+| | |
+|---|---|
+| `wintail *.log` | Glob auto-expanded (Node 22+ `fs.globSync`) |
+| `wintail dir/` | Directory expands to its `*.log` files |
+| `--dir-glob=PATTERN` | Customize directory expansion (default `*.log`) |
+| `wintail rotated.log.gz` | `.gz` files auto-decompressed (read mode only) |
+
+### Notifications
+
+| | |
+|---|---|
+| `--notify-on=PAT[=TITLE]` | Windows toast on match. Repeatable. Throttled to 1 per pattern per 5s. Non-Windows: silent no-op + 1 startup warning. |
+
+### PowerShell convenience
+
+| | |
+|---|---|
+| `--install-alias` | Add `Set-Alias tail wintail` to your `$PROFILE.CurrentUserAllHosts`. Idempotent, runs for both `pwsh` and `powershell`. |
+| `--uninstall-alias` | Remove the line added above |
+
+---
+
+## Real-world recipes
 
 ```powershell
-# Last 10 lines (default)
-wintail app.log
+# Live tail of an Unreal project, only the bits you care about, with toast on Fatal:
+wintail -F --ue -G "Error|Warning" --notify-on Fatal D:\MyGame\Saved\Logs\MyGame.log
 
-# Last 50 lines
-wintail -n 50 app.log
+# Tail every log file in a UE project's log directory:
+wintail -F D:\MyGame\Saved\Logs\
 
-# From line 100 onward
-wintail -n +100 app.log
+# JSON service log: filter to your service's errors and project to a clean view:
+wintail -F app.log --json-filter level=error --json-filter service=billing \
+  --json-extract '[{ts}] {level} {msg}'
 
-# Last 1 KB
-wintail -c 1k app.log
+# Capture last 100 errors from a noisy live log to a file:
+wintail -F -G ERROR --max-lines 100 --save errors.txt app.log
 
-# Follow appends (Ctrl-C to stop)
-wintail -f app.log
+# Long-running watch with periodic time separators and stats:
+wintail -F --mark=30 --stats=60 --highlight 'panic=red bold' app.log
 
-# Follow by name — survives rename/recreate (logrotate-style)
-wintail -F app.log
+# Tail a rotated gzipped log:
+wintail rotated.log.1.gz | wintail -G CRITICAL  # (or just use --grep directly)
 
-# Multiple files, with headers
-wintail a.log b.log
-
-# From a pipe
-Get-Content big.log | wintail -n 5
-
-# Tail a UTF-16 LE log written by some Windows tools
-wintail --encoding=utf16le myapp.log
-
-# Live tail, only ERROR lines, with line numbers
-wintail -F -G ERROR -N app.log
-
-# Drop noisy lines case-insensitively
-wintail --grep-v 'heartbeat|ping' -i -F app.log
-
-# Custom highlight on top of built-ins
-wintail --highlight 'panic=red bold' --highlight 'TODO=yellow' app.log
-
-# Glob multiple files (PowerShell doesn't auto-expand for tail)
-wintail -F *.log
-
-# Toast me when something Fatal hits the log
-wintail --notify-on 'Fatal' --notify-on 'OutOfMemory=Crash!' -F app.log
+# Multi-file follow with custom prefixes (interleaves cleanly without headers):
+wintail -F --prefix='[{source}] ' -q a.log b.log c.log
 ```
+
+---
 
 ## How `-f` and `-F` differ
 
 - `-f` follows the open file descriptor. If the file is renamed or replaced, you keep tailing the renamed file (which usually stops growing). Same as GNU tail.
-- `-F` follows the path. If the file is rotated (renamed + recreated, or deleted + recreated), wintail reopens the new file and prints `wintail: 'FILE' has been replaced; following new file` to stderr. This is the option you want for production logs.
+- `-F` follows the **path**. If the file is rotated (renamed + recreated, or deleted + recreated), wintail reopens the new file and prints `wintail: 'FILE' has been replaced; following new file` to stderr.
 
 Rotation detection on Windows uses a size+mtime heuristic (Node's `fs.Stats.ino` is always 0 on Windows, so the inode trick used on Linux doesn't work). It catches the common `logrotate`-style and `move + create` rotation patterns.
 
-## Publishing to npm (maintainer notes)
+---
+
+## Why not just use `Get-Content -Wait`?
+
+PowerShell's built-in is fine for occasional small files. For real log work it's frustrating:
+
+- Slow on big files — adds NoteProperty overhead per line
+- Doesn't survive log rotation
+- No coloring, no grep, no JSON filter, no toast
+- Verbose syntax (`Get-Content app.log -Wait -Tail 50`)
+
+`wintail -F app.log` is shorter, faster, and survives the things real logs do.
+
+---
+
+## Stats
+
+273 unit tests. Zero runtime deps. ~2,000 LOC. ~30 user-facing flags.
+
+---
+
+## Publishing to npm
 
 ```powershell
 npm login
 npm publish
 ```
 
-`bin`, `files`, `engines`, and `repository` are already configured in `package.json`. `npx wintail` will work for everyone after publish.
+`bin`, `files`, `engines`, and `repository` are pre-configured.
 
-## Development
-
-```powershell
-npm test          # runs tests with Node's built-in test runner
-npm link          # makes `wintail` available globally for testing
-```
+---
 
 ## License
 

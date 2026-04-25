@@ -27,6 +27,7 @@ const { makeJsonExtract } = require('./transforms/jsonExtract.js');
 const { makeRegexExtract } = require('./transforms/regexExtract.js');
 const { makeMaxLines } = require('./transforms/maxLines.js');
 const { makePrefix } = require('./transforms/prefix.js');
+const { startMarker } = require('./marker.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -269,6 +270,14 @@ async function main(argv, {
 
   if (opts.follow && followStates.length > 0) {
     if (pipeline.statsCollector) pipeline.statsCollector.start();
+    let marker = null;
+    if (opts.mark > 0) {
+      marker = startMarker({
+        intervalSec: opts.mark,
+        stderr,
+        color: resolveColorMode(opts, stdout),
+      });
+    }
     startFollow({
       files: followStates,
       lastEmittedPath,
