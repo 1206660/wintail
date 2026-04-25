@@ -42,6 +42,7 @@ const { makeSample } = require('./transforms/sample.js');
 const { makeExitCodeWatcher } = require('./exitCodeOnMatch.js');
 const { makeShowNonPrinting } = require('./transforms/showNonPrinting.js');
 const { makeGrepWithContext } = require('./transforms/grepContext.js');
+const { createSummary } = require('./transforms/summary.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -173,6 +174,12 @@ function buildPipeline(opts, stdout, stderr) {
     transforms.push(exitCodeWatcher.transform);
   }
 
+  let summary = null;
+  if (opts.summary) {
+    summary = createSummary({ topN: opts.summaryTop, normalize: !opts.summaryNoNormalize });
+    transforms.push(summary.transform);
+  }
+
   if (opts.lineNumber) transforms.push(makeLineNumberer());
 
   if (opts.notifyPatterns.length > 0) {
@@ -198,6 +205,7 @@ function buildPipeline(opts, stdout, stderr) {
   const pipe = createPipeline({ transforms, stdout, translateInput });
   pipe.statsCollector = statsCollector;
   pipe.exitCodeWatcher = exitCodeWatcher;
+  pipe.summary = summary;
   return pipe;
 }
 
@@ -451,6 +459,7 @@ async function main(argv, {
 
   pipeline.flush();
   if (pipeline.statsCollector) pipeline.statsCollector.report();
+  if (pipeline.summary) pipeline.summary.report(stderr);
   if (pipeline.exitCodeWatcher) {
     const m = pipeline.exitCodeWatcher.getMatched();
     if (m) {

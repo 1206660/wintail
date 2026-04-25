@@ -164,6 +164,13 @@ Filter & display (v0.2):
       --stats[=N]          every N seconds (default 10) print to stderr a
                            summary: total lines, errors, warnings, recent
                            lines/sec, top files. Final summary on exit.
+      --summary[=N]        on exit, print top N (default 10) most-frequent
+                           line patterns. Numbers, IPs, timestamps, UUIDs,
+                           hex pointers normalized so 'user 1', 'user 2',
+                           'user 3' collapse into one bucket. Useful for
+                           "what was happening here" log triage.
+      --summary-no-normalize
+                           use raw lines as keys instead (1:1 frequency)
       --json-filter=EXPR   keep only JSONL lines that match EXPR (repeatable;
                            combined as AND). EXPR: key=val, key!=val, key>=N,
                            key>N, key<=N, key<N, key~regex, key!~regex, or

@@ -140,6 +140,9 @@ function defaultOpts() {
     contextBefore: 0,
     contextAfter: 0,
     tailFromNow: false,
+    summary: false,
+    summaryTop: 10,
+    summaryNoNormalize: false,
   };
 }
 
@@ -425,6 +428,18 @@ function parseArgs(argv, baseOpts = null) {
         case 'tail-from-now':
         case 'no-initial':
           opts.tailFromNow = true;
+          break;
+        case 'summary':
+        case 'summary-on-exit':
+          opts.summary = true;
+          if (inline !== undefined) {
+            const n = parseInt(inline, 10);
+            if (Number.isFinite(n) && n > 0) opts.summaryTop = n;
+            else throw new UsageError(`invalid --summary count: ${inline}`);
+          }
+          break;
+        case 'summary-no-normalize':
+          opts.summaryNoNormalize = true;
           break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded

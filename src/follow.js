@@ -170,6 +170,9 @@ function startFollow(args) {
     if (args.pipeline && args.pipeline.statsCollector) {
       try { args.pipeline.statsCollector.stop(); } catch {}
     }
+    if (args.pipeline && args.pipeline.summary) {
+      try { args.pipeline.summary.report(process.stderr); } catch {}
+    }
     let finalCode = code;
     if (args.pipeline && args.pipeline.exitCodeWatcher) {
       const m = args.pipeline.exitCodeWatcher.getMatched();
