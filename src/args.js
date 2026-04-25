@@ -80,6 +80,7 @@ function validateColor(s) {
 function defaultOpts() {
   return {
     mode: 'tail',
+    resumeIndex: null,
     files: [],
     lines: null,
     bytes: null,
@@ -157,6 +158,16 @@ function parseArgs(argv) {
         case 'version': opts.mode = 'version'; return opts;
         case 'install-alias': opts.mode = 'install-alias'; return opts;
         case 'uninstall-alias': opts.mode = 'uninstall-alias'; return opts;
+        case 'history': opts.mode = 'history'; return opts;
+        case 'resume': {
+          opts.mode = 'resume';
+          if (inline !== undefined) {
+            const n = parseInt(inline, 10);
+            if (!Number.isFinite(n) || n < 1) throw new UsageError(`invalid --resume index: ${inline}`);
+            opts.resumeIndex = n;
+          }
+          return opts;
+        }
         case 'lines':
           opts.lines = parseCount(consumeValue('--lines', inline), '--lines');
           opts.bytes = null;

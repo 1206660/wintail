@@ -25,6 +25,12 @@ Mandatory arguments to long options are mandatory for short options too.
       --install-alias      add 'Set-Alias tail wintail' to your PowerShell
                              \$PROFILE so 'tail' calls wintail (Windows only)
       --uninstall-alias    remove the line added by --install-alias
+      --history            list the last 20 wintail invocations
+      --resume[=N]         interactively pick from the last 5 unique commands
+                           and re-run it. With =N, re-run that index directly
+                           (1 = oldest, 5 = newest). Stored at
+                           %LOCALAPPDATA%/wintail/history.jsonl on Windows or
+                           ~/.wintail/history.jsonl elsewhere.
   -h, --help               display this help and exit
   -V, --version            output version information and exit
 

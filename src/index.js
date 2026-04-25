@@ -29,6 +29,7 @@ const { makeMaxLines } = require('./transforms/maxLines.js');
 const { makePrefix } = require('./transforms/prefix.js');
 const { startMarker } = require('./marker.js');
 const { createWebServer, makeWebTee } = require('./web.js');
+const { recordInvocation, listHistory, pickFromHistory } = require('./history.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -173,6 +174,22 @@ async function main(argv, {
   if (opts.mode === 'uninstall-alias') {
     process.exit(uninstallAlias(stdout, stderr));
   }
+  if (opts.mode === 'history') {
+    listHistory({ stdout });
+    return;
+  }
+  if (opts.mode === 'resume') {
+    const picked = await pickFromHistory({
+      preselect: opts.resumeIndex,
+      stdin, stdout, stderr,
+    });
+    if (!picked) process.exit(1);
+    stderr.write(`wintail: → ${['wintail', ...picked.args].join(' ')}\n`);
+    return main(picked.args, { stdin, stdout, stderr });
+  }
+
+  // Record this invocation in history (best-effort, ignore IO errors)
+  recordInvocation(argv, { skip: opts.mode !== 'tail' });
 
   // Expand globs / directory FILE args
   try { opts.files = expandGlobs(opts.files, { dirPattern: opts.dirGlob }); }
