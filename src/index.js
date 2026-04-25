@@ -35,6 +35,7 @@ const { createWebServer, makeWebTee } = require('./web.js');
 const { recordInvocation, listHistory, pickFromHistory } = require('./history.js');
 const { generate: generateCompletion } = require('./completions.js');
 const { replayFile } = require('./replay.js');
+const { startWatch } = require('./watch.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -224,6 +225,15 @@ async function main(argv, {
   // Record this invocation in history (best-effort, ignore IO errors)
   recordInvocation(argv, { skip: opts.mode !== 'tail' });
 
+  // --watch CMD takes over: shell command output flows through pipeline
+  // periodically. FILE args are ignored when --watch is set.
+  if (opts.watch) {
+    if (opts.files.length > 0 && !(opts.files.length === 1 && opts.files[0] === '-')) {
+      stderr.write(`wintail: --watch active; ignoring FILE args\n`);
+    }
+    opts.files = [];  // skip the file loop entirely
+  }
+
   // Expand globs / directory FILE args
   try { opts.files = expandGlobs(opts.files, { dirPattern: opts.dirGlob }); }
   catch (e) {
@@ -351,6 +361,20 @@ async function main(argv, {
         followStates.push(st);
       }
     }
+  }
+
+  // --watch: spin up the periodic command runner instead of file follow.
+  if (opts.watch) {
+    if (pipeline.statsCollector) pipeline.statsCollector.start();
+    startWatch({
+      command: opts.watch,
+      intervalSec: opts.watchInterval,
+      pipeline,
+      stderr,
+      emitHeader: showHeaders ? emitHeader : null,
+    });
+    process.on('SIGINT', () => process.exit(130));
+    return;
   }
 
   if (opts.follow && followStates.length > 0) {

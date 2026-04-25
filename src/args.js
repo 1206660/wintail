@@ -129,6 +129,8 @@ function defaultOpts() {
     head: 0,
     plain: false,
     squeezeBlank: false,
+    watch: null,
+    watchInterval: 2.0,
   };
 }
 
@@ -353,6 +355,16 @@ function parseArgs(argv, baseOpts = null) {
         case 'squeeze-blank':
           opts.squeezeBlank = true;
           break;
+        case 'watch':
+          opts.watch = consumeValue('--watch', inline);
+          break;
+        case 'watch-interval': {
+          const v = consumeValue('--watch-interval', inline);
+          const n = parseFloat(v);
+          if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --watch-interval: ${v}`);
+          opts.watchInterval = n;
+          break;
+        }
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;

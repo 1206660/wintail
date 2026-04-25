@@ -38,6 +38,10 @@ Mandatory arguments to long options are mandatory for short options too.
                            speed (default 1; 2 = double speed; 0.5 = half).
                            Lines without timestamps fall back to a fixed gap.
                            Inter-line gaps capped at 5s to keep playback bearable.
+      --watch=CMD          run shell command CMD periodically; pipe each
+                           invocation's stdout through the pipeline.
+                           Replaces FILE args. Combine with all transforms.
+      --watch-interval=N   seconds between --watch runs (default 2)
       --completion=SHELL   print a tab-completion script. SHELL is one of
                            powershell, bash, or zsh.
                            Install: wintail --completion=powershell |
