@@ -86,6 +86,7 @@ function defaultOpts() {
     since: null,
     until: null,
     ue: false,
+    dirGlob: '*.log',
   };
 }
 
@@ -190,6 +191,9 @@ function parseArgs(argv) {
           break;
         case 'ue':
           opts.ue = true;
+          break;
+        case 'dir-glob':
+          opts.dirGlob = consumeValue('--dir-glob', inline);
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

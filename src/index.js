@@ -104,8 +104,8 @@ async function main(argv, {
     process.exit(installAlias(stdout, stderr));
   }
 
-  // Expand globs in FILE args
-  try { opts.files = expandGlobs(opts.files); }
+  // Expand globs / directory FILE args
+  try { opts.files = expandGlobs(opts.files, { dirPattern: opts.dirGlob }); }
   catch (e) {
     stderr.write(`wintail: ${e.message}\n`);
     process.exit(1);

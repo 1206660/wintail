@@ -54,6 +54,8 @@ Filter & display (v0.2):
                            Warning yellow, Fatal magenta bold, Verbose dim);
                            dim ts/frame brackets. Indented lines (likely stack
                            continuations) are dimmed.
+      --dir-glob=PATTERN   when a FILE arg is a directory, expand to files
+                           matching PATTERN (default: *.log)
 
 NUM may have a multiplier suffix:
   b 512, k 1024, K 1024, M 1024*1024, G 1024*1024*1024.

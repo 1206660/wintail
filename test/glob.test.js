@@ -53,3 +53,22 @@ test('empty match throws', () => {
     /No match/,
   );
 });
+
+test('directory expands to default *.log', () => {
+  const out = expand([TMP]);
+  assert.deepEqual(out, [path.join(TMP, 'a.log'), path.join(TMP, 'b.log')]);
+});
+
+test('directory with no matching files throws', () => {
+  const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'wintail-empty-'));
+  try {
+    assert.throws(() => expand([empty]), /no files matching/);
+  } finally {
+    fs.rmSync(empty, { recursive: true, force: true });
+  }
+});
+
+test('directory with custom pattern', () => {
+  const out = expand([TMP], { dirPattern: '*.txt' });
+  assert.deepEqual(out, [path.join(TMP, 'c.txt')]);
+});

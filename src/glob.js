@@ -1,8 +1,10 @@
 'use strict';
 
 const fs = require('node:fs');
+const path = require('node:path');
 
 const GLOB_CHARS = /[*?[\]{}]/;
+const DEFAULT_DIR_PATTERN = '*.log';
 
 function hasGlob(s) { return GLOB_CHARS.test(s); }
 
@@ -11,21 +13,51 @@ function isFile(p) {
   catch { return false; }
 }
 
-function expand(args) {
+function isDirectory(p) {
+  try { return fs.statSync(p).isDirectory(); }
+  catch { return false; }
+}
+
+function expandGlob(arg) {
+  let matches;
+  try { matches = fs.globSync(arg); }
+  catch (e) { throw new Error(`'${arg}': ${e.message}`); }
+  matches = matches.filter(isFile);
+  if (matches.length === 0) {
+    throw new Error(`'${arg}': No match`);
+  }
+  matches.sort((a, b) => a.localeCompare(b));
+  return matches;
+}
+
+function expandDirectory(dir, pattern) {
+  const joined = path.join(dir, pattern);
+  let matches;
+  try { matches = fs.globSync(joined); }
+  catch (e) { throw new Error(`'${dir}': ${e.message}`); }
+  matches = matches.filter(isFile);
+  if (matches.length === 0) {
+    throw new Error(`'${dir}': directory has no files matching ${pattern}`);
+  }
+  matches.sort((a, b) => a.localeCompare(b));
+  return matches;
+}
+
+function expand(args, { dirPattern = DEFAULT_DIR_PATTERN } = {}) {
   const out = [];
   for (const arg of args) {
-    if (arg === '-' || !hasGlob(arg)) { out.push(arg); continue; }
-    let matches;
-    try { matches = fs.globSync(arg); }
-    catch (e) { throw new Error(`'${arg}': ${e.message}`); }
-    matches = matches.filter(isFile);
-    if (matches.length === 0) {
-      throw new Error(`'${arg}': No match`);
+    if (arg === '-') { out.push(arg); continue; }
+    if (hasGlob(arg)) {
+      out.push(...expandGlob(arg));
+      continue;
     }
-    matches.sort((a, b) => a.localeCompare(b));
-    out.push(...matches);
+    if (isDirectory(arg)) {
+      out.push(...expandDirectory(arg, dirPattern));
+      continue;
+    }
+    out.push(arg);
   }
   return out;
 }
 
-module.exports = { expand, hasGlob };
+module.exports = { expand, hasGlob, expandGlob, expandDirectory, isDirectory, DEFAULT_DIR_PATTERN };
