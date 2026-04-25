@@ -123,6 +123,14 @@ test('Buffer input decoded as utf8', () => {
   assert.equal(stdout.text(), '日本語\n');
 });
 
+test('translateInput swaps NUL → newline before split', () => {
+  const stdout = captureStream();
+  const translateInput = (s) => s.replace(/\0/g, '\n');
+  const p = createPipeline({ transforms: [], stdout, translateInput });
+  p.writeChunk('a\0b\0c\0', 's');
+  assert.equal(stdout.text(), 'a\nb\nc\n');
+});
+
 test('flush applies transforms to partial line', () => {
   const stdout = captureStream();
   const upper = (line) => line.toUpperCase();

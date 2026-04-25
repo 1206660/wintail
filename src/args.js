@@ -135,6 +135,8 @@ function defaultOpts() {
     rateLimit: 0,
     every: 1,
     exitCodeMatchSpecs: [],
+    showNonPrinting: false,
+    nullData: false,
   };
 }
 
@@ -389,6 +391,12 @@ function parseArgs(argv, baseOpts = null) {
         case 'exit-code-on-match':
           opts.exitCodeMatchSpecs.push(consumeValue('--exit-code-on-match', inline));
           break;
+        case 'show-nonprinting':
+          opts.showNonPrinting = true;
+          break;
+        case 'null-data':
+          opts.nullData = true;
+          break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;
@@ -450,6 +458,8 @@ function parseArgs(argv, baseOpts = null) {
         }
         case 'N': opts.lineNumber = true; j++; break;
         case 'i': opts.ignoreCase = true; j++; break;
+        case 'A': opts.showNonPrinting = true; j++; break;
+        case 'z': opts.nullData = true; j++; break;
         default:
           throw new UsageError(`unrecognized option '-${c}'`);
       }

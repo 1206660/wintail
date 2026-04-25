@@ -40,6 +40,7 @@ const { makeTagger } = require('./transforms/tag.js');
 const { makeRateLimit } = require('./transforms/rateLimit.js');
 const { makeSample } = require('./transforms/sample.js');
 const { makeExitCodeWatcher } = require('./exitCodeOnMatch.js');
+const { makeShowNonPrinting } = require('./transforms/showNonPrinting.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -54,6 +55,7 @@ function buildPipeline(opts, stdout, stderr) {
   const transforms = [];
   let statsCollector = null;
 
+  if (opts.showNonPrinting) transforms.push(makeShowNonPrinting({ color: resolveColorMode(opts, stdout) }));
   if (opts.stripAnsi) transforms.push(makeStripAnsi());
   if (opts.squeezeBlank) transforms.push(makeSqueezeBlank());
   if (opts.collapseRepeats) transforms.push(makeCollapseRepeats());
@@ -178,7 +180,10 @@ function buildPipeline(opts, stdout, stderr) {
     transforms.push(makeMaxLines({ limit: opts.maxLines }));
   }
 
-  const pipe = createPipeline({ transforms, stdout });
+  const translateInput = opts.nullData
+    ? (s) => s.indexOf('\0') === -1 ? s : s.replace(/\0/g, '\n')
+    : null;
+  const pipe = createPipeline({ transforms, stdout, translateInput });
   pipe.statsCollector = statsCollector;
   pipe.exitCodeWatcher = exitCodeWatcher;
   return pipe;

@@ -141,6 +141,11 @@ Filter & display (v0.2):
       --save-append=FILE   like --save but appends to FILE if it exists.
       --strip-ansi         remove pre-existing ANSI escape codes from input
                            lines (runs first in the pipeline)
+  -A, --show-nonprinting   replace control bytes with cat-style glyphs
+                           (^M for CR, ^@ for NUL, ^? for DEL, \xNN otherwise).
+                           Useful for spotting hidden chars in logs.
+  -z, --null-data          treat NUL byte as the input line separator (output
+                           still uses newline). Like grep -z.
       --squeeze-blank      collapse consecutive blank/whitespace-only lines
                            to a single blank line (per source)
       --plain              raw output: disable color, built-in highlights, and

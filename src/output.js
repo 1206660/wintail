@@ -18,7 +18,7 @@ function splitContentEol(line) {
   return { content: line, eol: '' };
 }
 
-function createPipeline({ transforms = [], stdout = process.stdout } = {}) {
+function createPipeline({ transforms = [], stdout = process.stdout, translateInput = null } = {}) {
   const carry = new Map();
   const sourceState = new Map();
 
@@ -41,7 +41,9 @@ function createPipeline({ transforms = [], stdout = process.stdout } = {}) {
 
   function writeChunk(chunk, source) {
     if (!chunk || chunk.length === 0) return;
-    const text = (carry.get(source) || '') + (typeof chunk === 'string' ? chunk : chunk.toString('utf8'));
+    let raw = typeof chunk === 'string' ? chunk : chunk.toString('utf8');
+    if (translateInput) raw = translateInput(raw);
+    const text = (carry.get(source) || '') + raw;
     const { complete, partial } = splitLinesKeepEol(text);
     carry.set(source, partial);
 
