@@ -137,6 +137,9 @@ function defaultOpts() {
     exitCodeMatchSpecs: [],
     showNonPrinting: false,
     nullData: false,
+    contextBefore: 0,
+    contextAfter: 0,
+    tailFromNow: false,
   };
 }
 
@@ -397,6 +400,32 @@ function parseArgs(argv, baseOpts = null) {
         case 'null-data':
           opts.nullData = true;
           break;
+        case 'context': {
+          const v = consumeValue('--context', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid --context: ${v}`);
+          opts.contextBefore = n;
+          opts.contextAfter = n;
+          break;
+        }
+        case 'before-context': {
+          const v = consumeValue('--before-context', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid --before-context: ${v}`);
+          opts.contextBefore = n;
+          break;
+        }
+        case 'after-context': {
+          const v = consumeValue('--after-context', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid --after-context: ${v}`);
+          opts.contextAfter = n;
+          break;
+        }
+        case 'tail-from-now':
+        case 'no-initial':
+          opts.tailFromNow = true;
+          break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;
@@ -458,8 +487,36 @@ function parseArgs(argv, baseOpts = null) {
         }
         case 'N': opts.lineNumber = true; j++; break;
         case 'i': opts.ignoreCase = true; j++; break;
-        case 'A': opts.showNonPrinting = true; j++; break;
+        case 'A': {
+          const tail = body.slice(j + 1);
+          if (tail !== '' && /^\d+$/.test(tail)) {
+            // grep-style -A N (after-context)
+            opts.contextAfter = parseInt(tail, 10);
+            j = body.length;
+            break;
+          }
+          // bare -A is --show-nonprinting
+          opts.showNonPrinting = true;
+          j++; break;
+        }
         case 'z': opts.nullData = true; j++; break;
+        case 'C': {
+          const tail = body.slice(j + 1);
+          const val = tail !== '' ? tail : consumeValue('-C');
+          const n = parseInt(val, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid -C: ${val}`);
+          opts.contextBefore = n;
+          opts.contextAfter = n;
+          j = body.length; break;
+        }
+        case 'B': {
+          const tail = body.slice(j + 1);
+          const val = tail !== '' ? tail : consumeValue('-B');
+          const n = parseInt(val, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid -B: ${val}`);
+          opts.contextBefore = n;
+          j = body.length; break;
+        }
         default:
           throw new UsageError(`unrecognized option '-${c}'`);
       }

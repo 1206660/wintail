@@ -12,6 +12,8 @@ Mandatory arguments to long options are mandatory for short options too.
   -f, --follow[={name|descriptor}]
                            output appended data as the file grows;
                              an absent option argument means 'descriptor'
+      --tail-from-now      with -f/-F, skip initial backlog and only show
+                           lines appended from now on (alias --no-initial)
   -F                       same as --follow=name --retry
   -n, --lines=[+]NUM       output the last NUM lines, instead of the last 10;
                              or use -n +NUM to output starting with line NUM
@@ -64,6 +66,11 @@ Filter & display (v0.2):
                            by default, AND with --grep-and)
       --grep-and           require ALL --grep patterns to match (default OR)
       --grep-v=PATTERN     drop lines matching regex (repeatable)
+  -C, --context=N          with --grep, also show N lines before AND after
+                           each match (grep-style). Groups separated by '--'.
+  -B, --before-context=N   only N lines before each --grep match
+  -A N (digits required)   N lines after each --grep match (bare -A still
+                           means --show-nonprinting)
       --include-from=FILE  load --grep patterns from FILE (one per line; lines
                            starting with # and blank lines are skipped)
       --exclude-from=FILE  load --grep-v patterns from FILE (same format)

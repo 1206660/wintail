@@ -41,6 +41,7 @@ const { makeRateLimit } = require('./transforms/rateLimit.js');
 const { makeSample } = require('./transforms/sample.js');
 const { makeExitCodeWatcher } = require('./exitCodeOnMatch.js');
 const { makeShowNonPrinting } = require('./transforms/showNonPrinting.js');
+const { makeGrepWithContext } = require('./transforms/grepContext.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -101,12 +102,23 @@ function buildPipeline(opts, stdout, stderr) {
 
   if (opts.grepPatterns.length > 0) {
     try {
-      transforms.push(makeGrep({
-        patterns: opts.grepPatterns,
-        ignoreCase: opts.ignoreCase,
-        invert: false,
-        mode: opts.grepAnd ? 'and' : 'or',
-      }));
+      const useContext = opts.contextBefore > 0 || opts.contextAfter > 0;
+      if (useContext) {
+        transforms.push(makeGrepWithContext({
+          patterns: opts.grepPatterns,
+          ignoreCase: opts.ignoreCase,
+          mode: opts.grepAnd ? 'and' : 'or',
+          before: opts.contextBefore,
+          after: opts.contextAfter,
+        }));
+      } else {
+        transforms.push(makeGrep({
+          patterns: opts.grepPatterns,
+          ignoreCase: opts.ignoreCase,
+          invert: false,
+          mode: opts.grepAnd ? 'and' : 'or',
+        }));
+      }
     } catch (e) { throw new UsageError(e.message); }
   }
   if (opts.grepVPatterns.length > 0) {
@@ -332,7 +344,16 @@ async function main(argv, {
     lastEmittedPath = name;
   };
 
+  // --tail-from-now: skip initial print, only set up follow state
+  const skipInitialRead = opts.tailFromNow && opts.follow;
+
   for (const f of opts.files) {
+    if (skipInitialRead && f !== '-') {
+      const st = makeStateForFollow(f, opts.encoding);
+      if (st.fd === null && opts.follow !== 'name') continue;
+      followStates.push(st);
+      continue;
+    }
     if (f === '-') {
       emitHeader(STDIN_NAME);
       try { await readStdinTail(opts, stdin, pipeline, STDIN_NAME); }
