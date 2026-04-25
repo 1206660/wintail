@@ -92,6 +92,7 @@ function defaultOpts() {
     truncateWidth: null,
     save: null,
     saveAppend: false,
+    stripAnsi: false,
   };
 }
 
@@ -217,6 +218,9 @@ function parseArgs(argv) {
         case 'save-append':
           opts.save = consumeValue('--save-append', inline);
           opts.saveAppend = true;
+          break;
+        case 'strip-ansi':
+          opts.stripAnsi = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

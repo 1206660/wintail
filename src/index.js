@@ -19,6 +19,7 @@ const { makeUeFormatter } = require('./transforms/ue.js');
 const { makeAddTimestamp } = require('./transforms/addTimestamp.js');
 const { makeTruncate } = require('./transforms/truncate.js');
 const { createTeeOutput } = require('./multiOut.js');
+const { makeStripAnsi } = require('./transforms/stripAnsi.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -31,6 +32,8 @@ function describeOpenError(e, file) {
 
 function buildPipeline(opts, stdout) {
   const transforms = [];
+
+  if (opts.stripAnsi) transforms.push(makeStripAnsi());
 
   if (opts.since !== null || opts.until !== null) {
     try {
