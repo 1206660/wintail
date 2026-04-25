@@ -125,6 +125,9 @@ function defaultOpts() {
     webToken: null,
     theme: 'default',
     replay: null,
+    head: 0,
+    plain: false,
+    squeezeBlank: false,
   };
 }
 
@@ -331,6 +334,21 @@ function parseArgs(argv, baseOpts = null) {
           opts.replay = n;
           break;
         }
+        case 'head': {
+          const v = consumeValue('--head', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid --head count: ${v}`);
+          opts.head = n;
+          break;
+        }
+        case 'plain':
+          opts.plain = true;
+          opts.color = 'never';
+          opts.noDefaultHighlight = true;
+          break;
+        case 'squeeze-blank':
+          opts.squeezeBlank = true;
+          break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;

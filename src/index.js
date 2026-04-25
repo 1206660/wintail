@@ -3,7 +3,7 @@
 const { parseArgs, UsageError, defaultOpts } = require('./args.js');
 const { loadConfig, applyToOpts } = require('./config.js');
 const { HELP_TEXT, VERSION_TEXT } = require('./help.js');
-const { readLastLines, readLastBytes, readFromLine, readFromByte, isGzipPath } = require('./readTail.js');
+const { readLastLines, readLastBytes, readFromLine, readFromByte, readFirstLines, isGzipPath } = require('./readTail.js');
 const { startFollow, makeStateForFollow } = require('./follow.js');
 const { readStdinTail } = require('./stdin.js');
 const { installAlias, uninstallAlias } = require('./installAlias.js');
@@ -22,6 +22,7 @@ const { makeTruncate } = require('./transforms/truncate.js');
 const { createTeeOutput } = require('./multiOut.js');
 const { makeStripAnsi } = require('./transforms/stripAnsi.js');
 const { makeCollapseRepeats } = require('./transforms/collapseRepeats.js');
+const { makeSqueezeBlank } = require('./transforms/squeezeBlank.js');
 const { createStatsCollector } = require('./transforms/stats.js');
 const { makeJsonFilter } = require('./transforms/jsonFilter.js');
 const { makeJsonExtract } = require('./transforms/jsonExtract.js');
@@ -48,6 +49,7 @@ function buildPipeline(opts, stdout, stderr) {
   let statsCollector = null;
 
   if (opts.stripAnsi) transforms.push(makeStripAnsi());
+  if (opts.squeezeBlank) transforms.push(makeSqueezeBlank());
   if (opts.collapseRepeats) transforms.push(makeCollapseRepeats());
   if (opts.stats) {
     statsCollector = createStatsCollector({ intervalSec: opts.statsInterval, stderr });
@@ -310,7 +312,9 @@ async function main(argv, {
 
     let buf;
     try {
-      if (opts.bytes) {
+      if (opts.head > 0) {
+        buf = readFirstLines(f, opts.head, opts.encoding);
+      } else if (opts.bytes) {
         buf = opts.bytes.from === 'end'
           ? readLastBytes(f, opts.bytes.count)
           : readFromByte(f, opts.bytes.count);

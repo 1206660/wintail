@@ -166,6 +166,48 @@ test('readFromByte: past end', () => {
   assert.equal(asUtf8(readFromByte(p, 100)), '');
 });
 
+test('readFirstLines: first 3 of 5', () => {
+  const { readFirstLines } = require('../src/readTail.js');
+  const p = tmpFile('a\nb\nc\nd\ne\n');
+  assert.equal(asUtf8(readFirstLines(p, 3, 'utf8')), 'a\nb\nc\n');
+});
+
+test('readFirstLines: count > line count returns whole file', () => {
+  const { readFirstLines } = require('../src/readTail.js');
+  const p = tmpFile('a\nb\n');
+  assert.equal(asUtf8(readFirstLines(p, 100, 'utf8')), 'a\nb\n');
+});
+
+test('readFirstLines: 0 returns empty', () => {
+  const { readFirstLines } = require('../src/readTail.js');
+  const p = tmpFile('a\nb\n');
+  assert.equal(asUtf8(readFirstLines(p, 0, 'utf8')), '');
+});
+
+test('readFirstLines: BOM stripped', () => {
+  const { readFirstLines } = require('../src/readTail.js');
+  const buf = Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), Buffer.from('a\nb\nc\n', 'utf8')]);
+  const p = tmpFile(buf);
+  assert.equal(asUtf8(readFirstLines(p, 2, 'utf8')), 'a\nb\n');
+});
+
+test('readFirstLines: large file with N spanning chunks', () => {
+  const { readFirstLines } = require('../src/readTail.js');
+  const lines = [];
+  for (let i = 0; i < 5000; i++) lines.push(`line-${i}-padding-some-text`);
+  const p = tmpFile(lines.join('\n') + '\n');
+  const out = asUtf8(readFirstLines(p, 3, 'utf8')).split('\n').filter(Boolean);
+  assert.deepEqual(out, ['line-0-padding-some-text', 'line-1-padding-some-text', 'line-2-padding-some-text']);
+});
+
+test('readFirstLines: .gz auto-decompress', () => {
+  const { readFirstLines } = require('../src/readTail.js');
+  const zlib = require('node:zlib');
+  const p = path.join(TMP, `f${counter++}.log.gz`);
+  fs.writeFileSync(p, zlib.gzipSync(Buffer.from('a\nb\nc\nd\ne\n')));
+  assert.equal(asUtf8(readFirstLines(p, 2, 'utf8')), 'a\nb\n');
+});
+
 test('readLastLines: .gz auto-decompress', () => {
   const zlib = require('node:zlib');
   const p = path.join(TMP, `f${counter++}.log.gz`);

@@ -237,6 +237,53 @@ function readLastBytes(path, count) {
   }
 }
 
+function readFirstLines(path, count, encoding) {
+  if (count <= 0) return Buffer.alloc(0);
+  if (isGzipPath(path)) {
+    const buf = readGzipPath(path, encoding);
+    let seen = 0;
+    for (let i = 0; i < buf.length; i++) {
+      if (buf[i] === 0x0A) {
+        seen++;
+        if (seen === count) return buf.subarray(0, i + 1);
+      }
+    }
+    return buf;
+  }
+  const fd = openRead(path);
+  try {
+    const fileSize = fileSizeOf(fd);
+    if (fileSize === 0) return Buffer.alloc(0);
+    const bom = probeBom(fd);
+    const contentStart = bom.length;
+    if (fileSize <= contentStart) return Buffer.alloc(0);
+
+    let pos = contentStart;
+    let seen = 0;
+    const collected = [];
+    while (pos < fileSize && seen < count) {
+      const readSize = Math.min(CHUNK_SIZE, fileSize - pos);
+      const chunk = readBytes(fd, readSize, pos);
+      let cut = -1;
+      for (let i = 0; i < chunk.length; i++) {
+        if (chunk[i] === 0x0A) {
+          seen++;
+          if (seen === count) { cut = i; break; }
+        }
+      }
+      if (cut !== -1) {
+        collected.push(chunk.subarray(0, cut + 1));
+        return Buffer.concat(collected);
+      }
+      collected.push(chunk);
+      pos += chunk.length;
+    }
+    return Buffer.concat(collected);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 function readFromByte(path, byteNum) {
   if (isGzipPath(path)) {
     const buf = readGzipBuffer(path);
@@ -269,6 +316,7 @@ module.exports = {
   readFromLine,
   readLastBytes,
   readFromByte,
+  readFirstLines,
   initialOffsetForFollow,
   isGzipPath,
 };

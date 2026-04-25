@@ -15,6 +15,8 @@ Mandatory arguments to long options are mandatory for short options too.
   -F                       same as --follow=name --retry
   -n, --lines=[+]NUM       output the last NUM lines, instead of the last 10;
                              or use -n +NUM to output starting with line NUM
+      --head=NUM           output the FIRST NUM lines (opposite of -n).
+                             Wins over -n / -c when set.
       --pid=PID            with -f, terminate after process ID, PID dies
   -q, --quiet, --silent    never output headers giving file names
       --retry              keep trying to open a file if it is inaccessible
@@ -115,6 +117,11 @@ Filter & display (v0.2):
       --save-append=FILE   like --save but appends to FILE if it exists.
       --strip-ansi         remove pre-existing ANSI escape codes from input
                            lines (runs first in the pipeline)
+      --squeeze-blank      collapse consecutive blank/whitespace-only lines
+                           to a single blank line (per source)
+      --plain              raw output: disable color, built-in highlights, and
+                           terminal embellishments. Useful when piping wintail
+                           into another tool.
       --collapse-repeats   suppress consecutive identical lines and emit a
                            '[wintail: previous line repeated N times]' summary
                            when the streak ends (per source)
