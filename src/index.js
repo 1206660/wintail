@@ -36,6 +36,8 @@ const { recordInvocation, listHistory, pickFromHistory } = require('./history.js
 const { generate: generateCompletion } = require('./completions.js');
 const { replayFile } = require('./replay.js');
 const { startWatch } = require('./watch.js');
+const { makeTagger } = require('./transforms/tag.js');
+const { makeRateLimit } = require('./transforms/rateLimit.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -139,6 +141,13 @@ function buildPipeline(opts, stdout, stderr) {
   if (opts.prefix) {
     transforms.push(makePrefix({ template: opts.prefix, color: colorEnabled }));
   }
+
+  if (opts.tagSpecs.length > 0) {
+    try { transforms.push(makeTagger({ specs: opts.tagSpecs, color: colorEnabled })); }
+    catch (e) { throw new UsageError(e.message); }
+  }
+
+  if (opts.rateLimit > 0) transforms.push(makeRateLimit({ perSec: opts.rateLimit }));
 
   if (opts.lineNumber) transforms.push(makeLineNumberer());
 

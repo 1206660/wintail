@@ -131,6 +131,8 @@ function defaultOpts() {
     squeezeBlank: false,
     watch: null,
     watchInterval: 2.0,
+    tagSpecs: [],
+    rateLimit: 0,
   };
 }
 
@@ -363,6 +365,16 @@ function parseArgs(argv, baseOpts = null) {
           const n = parseFloat(v);
           if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --watch-interval: ${v}`);
           opts.watchInterval = n;
+          break;
+        }
+        case 'tag':
+          opts.tagSpecs.push(consumeValue('--tag', inline));
+          break;
+        case 'rate-limit': {
+          const v = consumeValue('--rate-limit', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid --rate-limit: ${v}`);
+          opts.rateLimit = n;
           break;
         }
         case 'config':

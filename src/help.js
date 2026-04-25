@@ -80,6 +80,12 @@ Filter & display (v0.2):
       --theme=NAME         color theme for built-in highlights. NAME:
                            default, dracula, solarized, monokai, nord,
                            github, high-contrast.
+      --tag=PAT=LABEL      prepend [LABEL] to lines matching PAT (repeatable;
+                           multiple matching tags chain). Each label gets a
+                           deterministic color when --color is enabled.
+      --rate-limit=N       cap output to N lines/sec per source. Excess lines
+                           are dropped; on next-second roll, a summary
+                           '[wintail: K lines dropped]' is printed.
       --notify-on=PAT[=TITLE]
                            fire a Windows toast when a line matches (repeatable,
                            throttled to 1/pattern/5s)
