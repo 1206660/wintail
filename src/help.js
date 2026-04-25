@@ -86,6 +86,13 @@ Filter & display (v0.2):
                            either comma-separated paths ('level,msg,user.id')
                            which join values with spaces, OR a template with
                            {path} placeholders ('[{ts}] [{level}] {msg}').
+      --regex-extract=PAT  apply regex; emit only the captured groups (joined
+                           by space) per line. Lines that don't match are
+                           dropped (override with --regex-extract-keep-non-match).
+                           If pattern has no capture groups, emit the full
+                           match. Honors --ignore-case.
+      --regex-extract-keep-non-match
+                           pass non-matching lines through unchanged
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

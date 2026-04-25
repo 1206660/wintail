@@ -100,6 +100,8 @@ function defaultOpts() {
     jsonKeepNonJson: false,
     jsonExtract: null,
     grepAnd: false,
+    regexExtract: null,
+    regexExtractKeepNonMatch: false,
   };
 }
 
@@ -251,6 +253,12 @@ function parseArgs(argv) {
           break;
         case 'grep-and':
           opts.grepAnd = true;
+          break;
+        case 'regex-extract':
+          opts.regexExtract = consumeValue('--regex-extract', inline);
+          break;
+        case 'regex-extract-keep-non-match':
+          opts.regexExtractKeepNonMatch = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

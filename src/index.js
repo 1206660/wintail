@@ -24,6 +24,7 @@ const { makeCollapseRepeats } = require('./transforms/collapseRepeats.js');
 const { createStatsCollector } = require('./transforms/stats.js');
 const { makeJsonFilter } = require('./transforms/jsonFilter.js');
 const { makeJsonExtract } = require('./transforms/jsonExtract.js');
+const { makeRegexExtract } = require('./transforms/regexExtract.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -68,6 +69,16 @@ function buildPipeline(opts, stdout, stderr) {
       spec: opts.jsonExtract,
       keepNonJson: opts.jsonKeepNonJson,
     }));
+  }
+
+  if (opts.regexExtract) {
+    try {
+      transforms.push(makeRegexExtract({
+        pattern: opts.regexExtract,
+        ignoreCase: opts.ignoreCase,
+        keepNonMatch: opts.regexExtractKeepNonMatch,
+      }));
+    } catch (e) { throw new UsageError(e.message); }
   }
 
   if (opts.grepPatterns.length > 0) {
