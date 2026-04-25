@@ -98,6 +98,7 @@ function defaultOpts() {
     ignoreCase: false,
     lineNumber: false,
     notifyPatterns: [],
+    webhookSpecs: [],
     prettyJson: false,
     since: null,
     until: null,
@@ -236,6 +237,9 @@ function parseArgs(argv, baseOpts = null) {
           break;
         case 'notify-on':
           opts.notifyPatterns.push(consumeValue('--notify-on', inline));
+          break;
+        case 'webhook':
+          opts.webhookSpecs.push(consumeValue('--webhook', inline));
           break;
         case 'pretty-json':
           opts.prettyJson = true;

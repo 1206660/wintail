@@ -79,6 +79,9 @@ Filter & display (v0.2):
       --notify-on=PAT[=TITLE]
                            fire a Windows toast when a line matches (repeatable,
                            throttled to 1/pattern/5s)
+      --webhook=PAT=URL    POST to URL on regex match (repeatable, throttled
+                           to 1/spec/5s). Auto-detects Slack / Discord /
+                           generic format. ANSI codes stripped from payload.
       --pretty-json        if a line is valid JSON, pretty-print it (2-space)
       --since=SPEC         only show lines whose timestamp is >= SPEC.
                            SPEC: relative (5m, 30s, 2h, 1d), today HH:MM,

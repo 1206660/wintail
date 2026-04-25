@@ -14,6 +14,7 @@ const { makeHighlighter, parseUserHighlights } = require('./transforms/highlight
 const { makeGrep } = require('./transforms/grep.js');
 const { makeLineNumberer } = require('./transforms/lineNumber.js');
 const { makeNotifier } = require('./transforms/notify.js');
+const { makeWebhook } = require('./transforms/webhook.js');
 const { makePrettyJson } = require('./transforms/prettyJson.js');
 const { makeSinceFilter } = require('./transforms/since.js');
 const { makeUeFormatter } = require('./transforms/ue.js');
@@ -142,6 +143,10 @@ function buildPipeline(opts, stdout, stderr) {
 
   if (opts.notifyPatterns.length > 0) {
     try { transforms.push(makeNotifier(opts.notifyPatterns)); }
+    catch (e) { throw new UsageError(e.message); }
+  }
+  if (opts.webhookSpecs.length > 0) {
+    try { transforms.push(makeWebhook(opts.webhookSpecs)); }
     catch (e) { throw new UsageError(e.message); }
   }
 
