@@ -38,6 +38,8 @@ const { replayFile } = require('./replay.js');
 const { startWatch } = require('./watch.js');
 const { makeTagger } = require('./transforms/tag.js');
 const { makeRateLimit } = require('./transforms/rateLimit.js');
+const { makeSample } = require('./transforms/sample.js');
+const { makeExitCodeWatcher } = require('./exitCodeOnMatch.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -148,6 +150,14 @@ function buildPipeline(opts, stdout, stderr) {
   }
 
   if (opts.rateLimit > 0) transforms.push(makeRateLimit({ perSec: opts.rateLimit }));
+  if (opts.every > 1) transforms.push(makeSample({ every: opts.every }));
+
+  let exitCodeWatcher = null;
+  if (opts.exitCodeMatchSpecs.length > 0) {
+    try { exitCodeWatcher = makeExitCodeWatcher(opts.exitCodeMatchSpecs); }
+    catch (e) { throw new UsageError(e.message); }
+    transforms.push(exitCodeWatcher.transform);
+  }
 
   if (opts.lineNumber) transforms.push(makeLineNumberer());
 
@@ -170,6 +180,7 @@ function buildPipeline(opts, stdout, stderr) {
 
   const pipe = createPipeline({ transforms, stdout });
   pipe.statsCollector = statsCollector;
+  pipe.exitCodeWatcher = exitCodeWatcher;
   return pipe;
 }
 
@@ -414,6 +425,13 @@ async function main(argv, {
 
   pipeline.flush();
   if (pipeline.statsCollector) pipeline.statsCollector.report();
+  if (pipeline.exitCodeWatcher) {
+    const m = pipeline.exitCodeWatcher.getMatched();
+    if (m) {
+      stderr.write(`wintail: exit-code-on-match: '${m.pattern}' matched → exit ${m.code}\n`);
+      if (m.code > exitCode) exitCode = m.code;
+    }
+  }
   // If --web was set without -f, keep the server alive so the user can browse
   // the captured snapshot until they Ctrl-C.
   if (webServer) {

@@ -133,6 +133,8 @@ function defaultOpts() {
     watchInterval: 2.0,
     tagSpecs: [],
     rateLimit: 0,
+    every: 1,
+    exitCodeMatchSpecs: [],
   };
 }
 
@@ -377,6 +379,16 @@ function parseArgs(argv, baseOpts = null) {
           opts.rateLimit = n;
           break;
         }
+        case 'every': {
+          const v = consumeValue('--every', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 1) throw new UsageError(`invalid --every: ${v}`);
+          opts.every = n;
+          break;
+        }
+        case 'exit-code-on-match':
+          opts.exitCodeMatchSpecs.push(consumeValue('--exit-code-on-match', inline));
+          break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;

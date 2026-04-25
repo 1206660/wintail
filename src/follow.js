@@ -170,13 +170,21 @@ function startFollow(args) {
     if (args.pipeline && args.pipeline.statsCollector) {
       try { args.pipeline.statsCollector.stop(); } catch {}
     }
+    let finalCode = code;
+    if (args.pipeline && args.pipeline.exitCodeWatcher) {
+      const m = args.pipeline.exitCodeWatcher.getMatched();
+      if (m && m.code > 0) {
+        try { process.stderr.write(`wintail: exit-code-on-match: '${m.pattern}' matched → exit ${m.code}\n`); } catch {}
+        finalCode = m.code;
+      }
+    }
     for (const s of args.files) {
       if (s.fd !== null) {
         try { fs.closeSync(s.fd); } catch {}
         s.fd = null;
       }
     }
-    if (typeof code === 'number') process.exit(code);
+    if (typeof finalCode === 'number') process.exit(finalCode);
   }
 
   const tick = () => {

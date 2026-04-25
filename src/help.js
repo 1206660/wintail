@@ -86,6 +86,12 @@ Filter & display (v0.2):
       --rate-limit=N       cap output to N lines/sec per source. Excess lines
                            are dropped; on next-second roll, a summary
                            '[wintail: K lines dropped]' is printed.
+      --every=N            sample 1 of every N lines (per source). 1 = pass
+                           through (default).
+      --exit-code-on-match=PAT[=CODE]
+                           if any line matches PAT, exit with CODE (default 1)
+                           when the run ends. Repeatable; first match wins.
+                           Useful in CI: tail logs, fail build on Fatal.
       --notify-on=PAT[=TITLE]
                            fire a Windows toast when a line matches (repeatable,
                            throttled to 1/pattern/5s)
