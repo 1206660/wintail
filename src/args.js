@@ -151,6 +151,7 @@ function parseArgs(argv) {
         case 'help': opts.mode = 'help'; return opts;
         case 'version': opts.mode = 'version'; return opts;
         case 'install-alias': opts.mode = 'install-alias'; return opts;
+        case 'uninstall-alias': opts.mode = 'uninstall-alias'; return opts;
         case 'lines':
           opts.lines = parseCount(consumeValue('--lines', inline), '--lines');
           opts.bytes = null;

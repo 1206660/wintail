@@ -24,6 +24,7 @@ Mandatory arguments to long options are mandatory for short options too.
       --encoding=ENC       file encoding: utf8 (default), utf16le, latin1, ascii
       --install-alias      add 'Set-Alias tail wintail' to your PowerShell
                              \$PROFILE so 'tail' calls wintail (Windows only)
+      --uninstall-alias    remove the line added by --install-alias
   -h, --help               display this help and exit
   -V, --version            output version information and exit
 

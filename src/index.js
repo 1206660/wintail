@@ -5,7 +5,7 @@ const { HELP_TEXT, VERSION_TEXT } = require('./help.js');
 const { readLastLines, readLastBytes, readFromLine, readFromByte, isGzipPath } = require('./readTail.js');
 const { startFollow, makeStateForFollow } = require('./follow.js');
 const { readStdinTail } = require('./stdin.js');
-const { installAlias } = require('./installAlias.js');
+const { installAlias, uninstallAlias } = require('./installAlias.js');
 const { createPipeline } = require('./output.js');
 const { expand: expandGlobs } = require('./glob.js');
 const { resolveColorMode } = require('./transforms/color.js');
@@ -157,6 +157,9 @@ async function main(argv, {
   if (opts.mode === 'version') { stdout.write(VERSION_TEXT); return; }
   if (opts.mode === 'install-alias') {
     process.exit(installAlias(stdout, stderr));
+  }
+  if (opts.mode === 'uninstall-alias') {
+    process.exit(uninstallAlias(stdout, stderr));
   }
 
   // Expand globs / directory FILE args

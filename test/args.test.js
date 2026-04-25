@@ -176,6 +176,10 @@ test('--install-alias', () => {
   assert.equal(parseArgs(['--install-alias']).mode, 'install-alias');
 });
 
+test('--uninstall-alias', () => {
+  assert.equal(parseArgs(['--uninstall-alias']).mode, 'uninstall-alias');
+});
+
 test('-- terminates flags', () => {
   const o = parseArgs(['--', '-n', 'looks-like-flag']);
   assert.deepEqual(o.files, ['-n', 'looks-like-flag']);
