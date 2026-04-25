@@ -25,6 +25,7 @@ const { createStatsCollector } = require('./transforms/stats.js');
 const { makeJsonFilter } = require('./transforms/jsonFilter.js');
 const { makeJsonExtract } = require('./transforms/jsonExtract.js');
 const { makeRegexExtract } = require('./transforms/regexExtract.js');
+const { makeMaxLines } = require('./transforms/maxLines.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -130,6 +131,10 @@ function buildPipeline(opts, stdout, stderr) {
 
   if (opts.truncate) {
     transforms.push(makeTruncate({ width: opts.truncateWidth, stdout }));
+  }
+
+  if (opts.maxLines > 0) {
+    transforms.push(makeMaxLines({ limit: opts.maxLines }));
   }
 
   const pipe = createPipeline({ transforms, stdout });

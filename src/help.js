@@ -68,6 +68,8 @@ Filter & display (v0.2):
       --truncate[=WIDTH]   truncate each line to WIDTH visible chars (default
                            = terminal width or 80) and append '…'. ANSI codes
                            don't count toward width.
+      --max-lines=N        emit at most N lines (after all filters) then exit.
+                           Useful with -f to capture a bounded live snapshot.
       --save=FILE          tee output to FILE in addition to stdout. ANSI
                            codes are stripped from the file. Overwrites.
       --save-append=FILE   like --save but appends to FILE if it exists.

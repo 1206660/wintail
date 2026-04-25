@@ -117,6 +117,7 @@ function defaultOpts() {
     grepAnd: false,
     regexExtract: null,
     regexExtractKeepNonMatch: false,
+    maxLines: 0,
   };
 }
 
@@ -281,6 +282,9 @@ function parseArgs(argv) {
           break;
         case 'exclude-from':
           opts.grepVPatterns.push(...readPatternsFile(consumeValue('--exclude-from', inline), '--exclude-from'));
+          break;
+        case 'max-lines':
+          opts.maxLines = parseIntOrThrow(consumeValue('--max-lines', inline), '--max-lines');
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
