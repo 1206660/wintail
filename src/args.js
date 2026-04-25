@@ -98,6 +98,7 @@ function defaultOpts() {
     statsInterval: 10,
     jsonFilters: [],
     jsonKeepNonJson: false,
+    jsonExtract: null,
   };
 }
 
@@ -243,6 +244,9 @@ function parseArgs(argv) {
           break;
         case 'json-keep-non-json':
           opts.jsonKeepNonJson = true;
+          break;
+        case 'json-extract':
+          opts.jsonExtract = consumeValue('--json-extract', inline);
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

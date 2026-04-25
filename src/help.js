@@ -78,7 +78,12 @@ Filter & display (v0.2):
                            key>N, key<=N, key<N, key~regex, key!~regex, or
                            just 'key' to require existence. Dot-paths for
                            nested (user.role=admin). Non-JSON lines dropped.
-      --json-keep-non-json with --json-filter, pass non-JSON lines through
+      --json-keep-non-json with --json-filter / --json-extract, pass non-JSON
+                           lines through unchanged
+      --json-extract=SPEC  project JSON fields to a clean text line. SPEC is
+                           either comma-separated paths ('level,msg,user.id')
+                           which join values with spaces, OR a template with
+                           {path} placeholders ('[{ts}] [{level}] {msg}').
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

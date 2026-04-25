@@ -23,6 +23,7 @@ const { makeStripAnsi } = require('./transforms/stripAnsi.js');
 const { makeCollapseRepeats } = require('./transforms/collapseRepeats.js');
 const { createStatsCollector } = require('./transforms/stats.js');
 const { makeJsonFilter } = require('./transforms/jsonFilter.js');
+const { makeJsonExtract } = require('./transforms/jsonExtract.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -60,6 +61,13 @@ function buildPipeline(opts, stdout, stderr) {
         keepNonJson: opts.jsonKeepNonJson,
       }));
     } catch (e) { throw new UsageError(e.message); }
+  }
+
+  if (opts.jsonExtract) {
+    transforms.push(makeJsonExtract({
+      spec: opts.jsonExtract,
+      keepNonJson: opts.jsonKeepNonJson,
+    }));
   }
 
   if (opts.grepPatterns.length > 0) {
