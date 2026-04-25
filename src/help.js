@@ -59,6 +59,9 @@ Filter & display (v0.2):
       --add-timestamp[=FMT]
                            prefix each line with current wall-clock time.
                            FMT: time (HH:MM:SS, default), iso, epoch, epoch-ms
+      --truncate[=WIDTH]   truncate each line to WIDTH visible chars (default
+                           = terminal width or 80) and append '…'. ANSI codes
+                           don't count toward width.
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

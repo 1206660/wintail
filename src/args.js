@@ -88,6 +88,8 @@ function defaultOpts() {
     ue: false,
     dirGlob: '*.log',
     addTimestamp: null,
+    truncate: false,
+    truncateWidth: null,
   };
 }
 
@@ -198,6 +200,14 @@ function parseArgs(argv) {
           break;
         case 'add-timestamp':
           opts.addTimestamp = inline === undefined ? 'time' : inline;
+          break;
+        case 'truncate':
+          opts.truncate = true;
+          if (inline !== undefined) {
+            const n = parseInt(inline, 10);
+            if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --truncate width: ${inline}`);
+            opts.truncateWidth = n;
+          }
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
