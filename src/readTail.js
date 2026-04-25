@@ -1,9 +1,61 @@
 'use strict';
 
 const fs = require('node:fs');
+const zlib = require('node:zlib');
 const { detectBom, decodeChunk } = require('./encoding.js');
 
 const CHUNK_SIZE = 64 * 1024;
+
+function isGzipPath(p) {
+  return /\.gz$/i.test(p);
+}
+
+function readGzipBuffer(path) {
+  const compressed = fs.readFileSync(path);
+  return zlib.gunzipSync(compressed);
+}
+
+function bufferStripBom(buf, defaultEncoding) {
+  const bom = detectBom(buf);
+  if (!bom.encoding) return { buf, encoding: defaultEncoding };
+  return { buf: buf.subarray(bom.length), encoding: bom.encoding };
+}
+
+function takeLastNLinesFromBuf(buf, count) {
+  if (count <= 0 || buf.length === 0) return Buffer.alloc(0);
+  const trailingLF = buf[buf.length - 1] === 0x0A;
+  const target = count + (trailingLF ? 1 : 0);
+  let seen = 0;
+  for (let i = buf.length - 1; i >= 0; i--) {
+    if (buf[i] === 0x0A) {
+      seen++;
+      if (seen === target) return buf.subarray(i + 1);
+    }
+  }
+  return buf;
+}
+
+function skipNLinesFromBuf(buf, skip) {
+  if (skip <= 0) return buf;
+  let seen = 0;
+  for (let i = 0; i < buf.length; i++) {
+    if (buf[i] === 0x0A) {
+      seen++;
+      if (seen === skip) return buf.subarray(i + 1);
+    }
+  }
+  return Buffer.alloc(0);
+}
+
+function readGzipPath(path, encoding) {
+  const raw = readGzipBuffer(path);
+  const stripped = bufferStripBom(raw, encoding);
+  let buf = stripped.buf;
+  if (stripped.encoding === 'utf16le' || stripped.encoding === 'utf16be') {
+    buf = Buffer.from(decodeChunk(buf, stripped.encoding), 'utf8');
+  }
+  return buf;
+}
 
 function openRead(path) {
   return fs.openSync(path, 'r');
@@ -52,6 +104,9 @@ function endsWithLF(fd, fileSize) {
 
 function readLastLines(path, count, encoding) {
   if (count <= 0) return Buffer.alloc(0);
+  if (isGzipPath(path)) {
+    return takeLastNLinesFromBuf(readGzipPath(path, encoding), count);
+  }
   const fd = openRead(path);
   try {
     const fileSize = fileSizeOf(fd);
@@ -116,6 +171,9 @@ function readLastLines(path, count, encoding) {
 }
 
 function readFromLine(path, lineNum, encoding) {
+  if (isGzipPath(path)) {
+    return skipNLinesFromBuf(readGzipPath(path, encoding), Math.max(0, lineNum - 1));
+  }
   const fd = openRead(path);
   try {
     const fileSize = fileSizeOf(fd);
@@ -163,6 +221,11 @@ function readFromLine(path, lineNum, encoding) {
 
 function readLastBytes(path, count) {
   if (count <= 0) return Buffer.alloc(0);
+  if (isGzipPath(path)) {
+    const buf = readGzipBuffer(path);
+    const start = Math.max(0, buf.length - count);
+    return buf.subarray(start);
+  }
   const fd = openRead(path);
   try {
     const fileSize = fileSizeOf(fd);
@@ -175,6 +238,11 @@ function readLastBytes(path, count) {
 }
 
 function readFromByte(path, byteNum) {
+  if (isGzipPath(path)) {
+    const buf = readGzipBuffer(path);
+    const start = Math.max(0, byteNum - 1);
+    return start >= buf.length ? Buffer.alloc(0) : buf.subarray(start);
+  }
   const fd = openRead(path);
   try {
     const fileSize = fileSizeOf(fd);
@@ -202,4 +270,5 @@ module.exports = {
   readLastBytes,
   readFromByte,
   initialOffsetForFollow,
+  isGzipPath,
 };

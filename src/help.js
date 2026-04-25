@@ -57,6 +57,9 @@ Filter & display (v0.2):
       --dir-glob=PATTERN   when a FILE arg is a directory, expand to files
                            matching PATTERN (default: *.log)
 
+.gz files are auto-decompressed (read mode only; -f/-F rejected since gz
+files do not grow).
+
 NUM may have a multiplier suffix:
   b 512, k 1024, K 1024, M 1024*1024, G 1024*1024*1024.
 

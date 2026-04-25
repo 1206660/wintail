@@ -165,3 +165,25 @@ test('readFromByte: past end', () => {
   const p = tmpFile('hi');
   assert.equal(asUtf8(readFromByte(p, 100)), '');
 });
+
+test('readLastLines: .gz auto-decompress', () => {
+  const zlib = require('node:zlib');
+  const p = path.join(TMP, `f${counter++}.log.gz`);
+  const original = 'a\nb\nc\nd\ne\n';
+  fs.writeFileSync(p, zlib.gzipSync(Buffer.from(original)));
+  assert.equal(asUtf8(readLastLines(p, 2, 'utf8')), 'd\ne\n');
+});
+
+test('readLastBytes: .gz', () => {
+  const zlib = require('node:zlib');
+  const p = path.join(TMP, `f${counter++}.log.gz`);
+  fs.writeFileSync(p, zlib.gzipSync(Buffer.from('Hello, World!')));
+  assert.equal(asUtf8(readLastBytes(p, 6)), 'World!');
+});
+
+test('readFromLine: .gz', () => {
+  const zlib = require('node:zlib');
+  const p = path.join(TMP, `f${counter++}.log.gz`);
+  fs.writeFileSync(p, zlib.gzipSync(Buffer.from('a\nb\nc\nd\n')));
+  assert.equal(asUtf8(readFromLine(p, 3, 'utf8')), 'c\nd\n');
+});

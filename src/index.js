@@ -2,7 +2,7 @@
 
 const { parseArgs, UsageError } = require('./args.js');
 const { HELP_TEXT, VERSION_TEXT } = require('./help.js');
-const { readLastLines, readLastBytes, readFromLine, readFromByte } = require('./readTail.js');
+const { readLastLines, readLastBytes, readFromLine, readFromByte, isGzipPath } = require('./readTail.js');
 const { startFollow, makeStateForFollow } = require('./follow.js');
 const { readStdinTail } = require('./stdin.js');
 const { installAlias } = require('./installAlias.js');
@@ -109,6 +109,15 @@ async function main(argv, {
   catch (e) {
     stderr.write(`wintail: ${e.message}\n`);
     process.exit(1);
+  }
+
+  // Reject -f/-F on .gz (they don't grow)
+  if (opts.follow) {
+    const gz = opts.files.find(isGzipPath);
+    if (gz) {
+      stderr.write(`wintail: cannot follow '${gz}': .gz files do not grow\n`);
+      process.exit(1);
+    }
   }
 
   let pipeline;
