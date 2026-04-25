@@ -76,6 +76,7 @@ function buildPipeline(opts, stdout, stderr) {
         patterns: opts.grepPatterns,
         ignoreCase: opts.ignoreCase,
         invert: false,
+        mode: opts.grepAnd ? 'and' : 'or',
       }));
     } catch (e) { throw new UsageError(e.message); }
   }

@@ -42,3 +42,16 @@ test('empty patterns is passthrough', () => {
 test('invalid regex throws', () => {
   assert.throws(() => makeGrep({ patterns: ['(unclosed'] }), /invalid regex/);
 });
+
+test('AND mode: all patterns must match', () => {
+  const g = makeGrep({ patterns: ['ERROR', 'database'], mode: 'and' });
+  assert.equal(g('ERROR: database connection lost'), 'ERROR: database connection lost');
+  assert.equal(g('ERROR: timeout'), null);
+  assert.equal(g('INFO: database query'), null);
+});
+
+test('AND mode + invert: drop only when all match', () => {
+  const g = makeGrep({ patterns: ['a', 'b'], mode: 'and', invert: true });
+  assert.equal(g('a only'), 'a only');
+  assert.equal(g('a and b'), null);
+});

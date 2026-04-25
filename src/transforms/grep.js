@@ -5,13 +5,16 @@ function compilePattern(pattern, ignoreCase) {
   catch (e) { throw new Error(`invalid regex '${pattern}': ${e.message}`); }
 }
 
-function makeGrep({ patterns = [], ignoreCase = false, invert = false } = {}) {
+function makeGrep({ patterns = [], ignoreCase = false, invert = false, mode = 'or' } = {}) {
   if (patterns.length === 0) return (line) => line;
   const compiled = patterns.map((p) => compilePattern(p, ignoreCase));
+  const reduce = mode === 'and'
+    ? (line) => compiled.every((r) => r.test(line))
+    : (line) => compiled.some((r) => r.test(line));
   return function grep(line) {
-    const anyMatch = compiled.some((r) => r.test(line));
-    if (invert) return anyMatch ? null : line;
-    return anyMatch ? line : null;
+    const m = reduce(line);
+    if (invert) return m ? null : line;
+    return m ? line : null;
   };
 }
 

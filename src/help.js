@@ -28,7 +28,9 @@ Mandatory arguments to long options are mandatory for short options too.
   -V, --version            output version information and exit
 
 Filter & display (v0.2):
-  -G, --grep=PATTERN       only show lines matching regex (repeatable)
+  -G, --grep=PATTERN       only show lines matching regex (repeatable; OR
+                           by default, AND with --grep-and)
+      --grep-and           require ALL --grep patterns to match (default OR)
       --grep-v=PATTERN     drop lines matching regex (repeatable)
   -i, --ignore-case        case-insensitive --grep / --grep-v
   -N, --line-number        prefix each line with its 1-based line number

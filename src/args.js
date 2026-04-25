@@ -99,6 +99,7 @@ function defaultOpts() {
     jsonFilters: [],
     jsonKeepNonJson: false,
     jsonExtract: null,
+    grepAnd: false,
   };
 }
 
@@ -247,6 +248,9 @@ function parseArgs(argv) {
           break;
         case 'json-extract':
           opts.jsonExtract = consumeValue('--json-extract', inline);
+          break;
+        case 'grep-and':
+          opts.grepAnd = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
