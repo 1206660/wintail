@@ -1,13 +1,19 @@
 'use strict';
 
 const { makeWrap, parseColorSpec } = require('./color.js');
+const { getTheme } = require('../themes.js');
 
-const BUILTIN_PATTERNS = [
-  { regex: /\b(error|fatal|panic)\b/gi, codeKey: '1;31' },
-  { regex: /\b(warn(?:ing)?)\b/gi,      codeKey: '33' },
-  { regex: /\b(info)\b/gi,              codeKey: '36' },
-  { regex: /\b(debug|verbose|trace)\b/gi, codeKey: '2' },
-];
+function builtinPatternsForTheme(themeName = 'default') {
+  const t = getTheme(themeName);
+  return [
+    { regex: /\b(error|fatal|panic)\b/gi, codeKey: t.error },
+    { regex: /\b(warn(?:ing)?)\b/gi,      codeKey: t.warn },
+    { regex: /\b(info)\b/gi,              codeKey: t.info },
+    { regex: /\b(debug|verbose|trace)\b/gi, codeKey: t.debug },
+  ];
+}
+
+const BUILTIN_PATTERNS = builtinPatternsForTheme('default');
 
 function parseUserHighlights(specs) {
   // specs: array of strings like 'pattern=color' or 'pattern=red bold'
@@ -27,11 +33,11 @@ function parseUserHighlights(specs) {
   return out;
 }
 
-function makeHighlighter({ user = [], includeBuiltins = true, enabled = true } = {}) {
+function makeHighlighter({ user = [], includeBuiltins = true, enabled = true, theme = 'default' } = {}) {
   const wrap = makeWrap(enabled);
-  // user patterns first (higher priority), then built-ins
+  // user patterns first (higher priority), then built-ins from selected theme
   const patterns = [...user];
-  if (includeBuiltins) patterns.push(...BUILTIN_PATTERNS);
+  if (includeBuiltins) patterns.push(...builtinPatternsForTheme(theme));
 
   if (!enabled || patterns.length === 0) return (line) => line;
 
@@ -64,4 +70,4 @@ function makeHighlighter({ user = [], includeBuiltins = true, enabled = true } =
   };
 }
 
-module.exports = { makeHighlighter, parseUserHighlights, BUILTIN_PATTERNS };
+module.exports = { makeHighlighter, parseUserHighlights, BUILTIN_PATTERNS, builtinPatternsForTheme };

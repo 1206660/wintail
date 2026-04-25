@@ -31,6 +31,11 @@ Mandatory arguments to long options are mandatory for short options too.
                            (1 = oldest, 5 = newest). Stored at
                            %LOCALAPPDATA%/wintail/history.jsonl on Windows or
                            ~/.wintail/history.jsonl elsewhere.
+      --replay[=RATE]      replay each FILE at simulated tail-f speed using
+                           parsed timestamps as the clock. RATE multiplies
+                           speed (default 1; 2 = double speed; 0.5 = half).
+                           Lines without timestamps fall back to a fixed gap.
+                           Inter-line gaps capped at 5s to keep playback bearable.
       --completion=SHELL   print a tab-completion script. SHELL is one of
                            powershell, bash, or zsh.
                            Install: wintail --completion=powershell |
@@ -66,6 +71,9 @@ Filter & display (v0.2):
                            COLOR: red,green,yellow,blue,magenta,cyan,white,
                            dim,bold (combine with space: 'red bold')
       --no-default-highlight  disable built-in ERROR/WARN/INFO/DEBUG colors
+      --theme=NAME         color theme for built-in highlights. NAME:
+                           default, dracula, solarized, monokai, nord,
+                           github, high-contrast.
       --notify-on=PAT[=TITLE]
                            fire a Windows toast when a line matches (repeatable,
                            throttled to 1/pattern/5s)

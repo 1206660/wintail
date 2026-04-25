@@ -32,6 +32,7 @@ const { startMarker } = require('./marker.js');
 const { createWebServer, makeWebTee } = require('./web.js');
 const { recordInvocation, listHistory, pickFromHistory } = require('./history.js');
 const { generate: generateCompletion } = require('./completions.js');
+const { replayFile } = require('./replay.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -113,11 +114,14 @@ function buildPipeline(opts, stdout, stderr) {
     let user;
     try { user = parseUserHighlights(opts.highlights); }
     catch (e) { throw new UsageError(e.message); }
-    transforms.push(makeHighlighter({
-      user,
-      includeBuiltins: !opts.noDefaultHighlight,
-      enabled: true,
-    }));
+    try {
+      transforms.push(makeHighlighter({
+        user,
+        includeBuiltins: !opts.noDefaultHighlight,
+        enabled: true,
+        theme: opts.theme,
+      }));
+    } catch (e) { throw new UsageError(e.message); }
   }
 
   if (opts.prettyJson) transforms.push(makePrettyJson());
@@ -287,6 +291,20 @@ async function main(argv, {
       emitHeader(STDIN_NAME);
       try { await readStdinTail(opts, stdin, pipeline, STDIN_NAME); }
       catch (e) { stderr.write(`wintail: standard input: ${e.message}\n`); exitCode = 1; }
+      continue;
+    }
+
+    if (opts.replay) {
+      emitHeader(f);
+      try {
+        await replayFile(f, {
+          rate: opts.replay,
+          write: (s) => pipeline.writeChunk(s, f),
+        });
+      } catch (e) {
+        stderr.write(`wintail: ${describeOpenError(e, f)}\n`);
+        exitCode = 1;
+      }
       continue;
     }
 

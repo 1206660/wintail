@@ -123,6 +123,8 @@ function defaultOpts() {
     mark: 0,
     web: null,
     webToken: null,
+    theme: 'default',
+    replay: null,
   };
 }
 
@@ -319,6 +321,16 @@ function parseArgs(argv, baseOpts = null) {
         case 'web-token':
           opts.webToken = consumeValue('--web-token', inline);
           break;
+        case 'theme':
+          opts.theme = consumeValue('--theme', inline);
+          break;
+        case 'replay': {
+          const v = inline === undefined ? '1' : inline;
+          const n = parseFloat(v);
+          if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --replay rate: ${v}`);
+          opts.replay = n;
+          break;
+        }
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;
