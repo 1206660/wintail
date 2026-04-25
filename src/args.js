@@ -145,6 +145,7 @@ function defaultOpts() {
     summaryNoNormalize: false,
     diffShowCommon: false,
     limitBytes: 0,
+    plugins: [],
   };
 }
 
@@ -456,6 +457,9 @@ function parseArgs(argv, baseOpts = null) {
           opts.limitBytes = n;
           break;
         }
+        case 'plugin':
+          opts.plugins.push(consumeValue('--plugin', inline));
+          break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;

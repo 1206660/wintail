@@ -45,6 +45,7 @@ const { makeGrepWithContext } = require('./transforms/grepContext.js');
 const { createSummary } = require('./transforms/summary.js');
 const { makeLimitBytes } = require('./transforms/limitBytes.js');
 const { emitDiff } = require('./diff.js');
+const { loadPlugins } = require('./plugin.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -91,6 +92,11 @@ function buildPipeline(opts, stdout, stderr) {
       spec: opts.jsonExtract,
       keepNonJson: opts.jsonKeepNonJson,
     }));
+  }
+
+  if (opts.plugins.length > 0) {
+    try { transforms.push(...loadPlugins(opts.plugins)); }
+    catch (e) { throw new UsageError(e.message); }
   }
 
   if (opts.regexExtract) {

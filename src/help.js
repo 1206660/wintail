@@ -34,6 +34,11 @@ Mandatory arguments to long options are mandatory for short options too.
                            (handles duplicate-count differences). Common lines
                            hidden unless --diff-show-common.
       --diff-show-common   include common lines (prefixed ' ') in --diff output
+      --plugin=PATH        load a custom JS transform from PATH (CommonJS).
+                           Module exports: function(line, ctx) ⇒ string|null,
+                           or { transform }, or array of functions.
+                           ctx.getState(key, init) for per-source state.
+                           Repeatable.
       --history            list the last 20 wintail invocations
       --resume[=N]         interactively pick from the last 5 unique commands
                            and re-run it. With =N, re-run that index directly
