@@ -1,6 +1,7 @@
 'use strict';
 
-const { parseArgs, UsageError } = require('./args.js');
+const { parseArgs, UsageError, defaultOpts } = require('./args.js');
+const { loadConfig, applyToOpts } = require('./config.js');
 const { HELP_TEXT, VERSION_TEXT } = require('./help.js');
 const { readLastLines, readLastBytes, readFromLine, readFromByte, isGzipPath } = require('./readTail.js');
 const { startFollow, makeStateForFollow } = require('./follow.js');
@@ -157,7 +158,19 @@ async function main(argv, {
   stderr = process.stderr,
 } = {}) {
   let opts;
-  try { opts = parseArgs(argv); }
+  let baseOpts;
+  try {
+    const cfg = loadConfig(argv);
+    baseOpts = applyToOpts(defaultOpts(), cfg.settings);
+    if (cfg.source) {
+      stderr.write(`wintail: loaded config from ${cfg.source}${cfg.profile ? ` (profile: ${cfg.profile})` : ''}\n`);
+    }
+  } catch (e) {
+    stderr.write(`wintail: ${e.message}\n`);
+    process.exit(2);
+  }
+
+  try { opts = parseArgs(argv, baseOpts); }
   catch (e) {
     if (e instanceof UsageError) {
       stderr.write(`wintail: ${e.message}\n`);

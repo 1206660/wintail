@@ -35,6 +35,16 @@ Mandatory arguments to long options are mandatory for short options too.
                            powershell, bash, or zsh.
                            Install: wintail --completion=powershell |
                                     Out-String | Invoke-Expression
+      --config=FILE        load JSON config from FILE (overrides discovery)
+      --no-config          ignore any auto-discovered .wintailrc
+      --profile=NAME       select named profile from a profiled config
+
+Auto-discovered config files (in priority order):
+  ./.wintailrc, ./.wintailrc.json, ./wintail.config.json,
+  ~/.wintailrc, ~/.wintailrc.json, ~/wintail.config.json
+Each maps wintail flags to JSON keys (use shorthand: 'grep', 'highlight',
+'pretty-json', etc.). CLI args still override config values. Profiled
+format: { "default": {...}, "errors": {...}, "ue-debug": {...} }.
   -h, --help               display this help and exit
   -V, --version            output version information and exit
 

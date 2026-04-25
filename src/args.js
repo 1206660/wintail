@@ -126,8 +126,8 @@ function defaultOpts() {
   };
 }
 
-function parseArgs(argv) {
-  const opts = defaultOpts();
+function parseArgs(argv, baseOpts = null) {
+  const opts = baseOpts ? { ...baseOpts } : defaultOpts();
   let i = 0;
   let endOfFlags = false;
 
@@ -318,6 +318,14 @@ function parseArgs(argv) {
           break;
         case 'web-token':
           opts.webToken = consumeValue('--web-token', inline);
+          break;
+        case 'config':
+          consumeValue('--config', inline);  // pre-scanned, already loaded
+          break;
+        case 'no-config':
+          break;  // pre-scanned
+        case 'profile':
+          consumeValue('--profile', inline);  // pre-scanned
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
