@@ -14,6 +14,7 @@ const { makeGrep } = require('./transforms/grep.js');
 const { makeLineNumberer } = require('./transforms/lineNumber.js');
 const { makeNotifier } = require('./transforms/notify.js');
 const { makePrettyJson } = require('./transforms/prettyJson.js');
+const { makeSinceFilter } = require('./transforms/since.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -26,6 +27,15 @@ function describeOpenError(e, file) {
 
 function buildPipeline(opts, stdout) {
   const transforms = [];
+
+  if (opts.since !== null || opts.until !== null) {
+    try {
+      transforms.push(makeSinceFilter({
+        since: opts.since !== null ? opts.since : undefined,
+        until: opts.until !== null ? opts.until : undefined,
+      }));
+    } catch (e) { throw new UsageError(e.message); }
+  }
 
   if (opts.grepPatterns.length > 0) {
     try {

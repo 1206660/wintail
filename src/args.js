@@ -83,6 +83,8 @@ function defaultOpts() {
     lineNumber: false,
     notifyPatterns: [],
     prettyJson: false,
+    since: null,
+    until: null,
   };
 }
 
@@ -178,6 +180,12 @@ function parseArgs(argv) {
           break;
         case 'pretty-json':
           opts.prettyJson = true;
+          break;
+        case 'since':
+          opts.since = consumeValue('--since', inline);
+          break;
+        case 'until':
+          opts.until = consumeValue('--until', inline);
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

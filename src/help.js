@@ -44,6 +44,11 @@ Filter & display (v0.2):
                            fire a Windows toast when a line matches (repeatable,
                            throttled to 1/pattern/5s)
       --pretty-json        if a line is valid JSON, pretty-print it (2-space)
+      --since=SPEC         only show lines whose timestamp is >= SPEC.
+                           SPEC: relative (5m, 30s, 2h, 1d), today HH:MM,
+                           ISO 8601, UE format. Lines without a timestamp
+                           inherit the previous line's (so stack traces stay).
+      --until=SPEC         only show lines whose timestamp is <= SPEC
 
 NUM may have a multiplier suffix:
   b 512, k 1024, K 1024, M 1024*1024, G 1024*1024*1024.
