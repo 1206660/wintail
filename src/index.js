@@ -270,6 +270,10 @@ async function main(argv, {
         token: opts.webToken,
         title,
         stderr,
+        metricsProvider: () => {
+          if (pipeline && pipeline.statsCollector) return pipeline.statsCollector.snapshot();
+          return {};
+        },
       });
     } catch (e) {
       stderr.write(`wintail: ${e.message}\n`);

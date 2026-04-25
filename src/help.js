@@ -117,8 +117,13 @@ Filter & display (v0.2):
       --web=SPEC           expose live tail in a browser. SPEC is :PORT (binds
                            127.0.0.1) or HOST:PORT. Page has filter / pause /
                            autoscroll / clear. ANSI colors translated to HTML.
+                           Server also serves GET /health (JSON status) and
+                           GET /metrics (Prometheus text format with
+                           wintail_lines_total, wintail_subscribers, etc.,
+                           plus errors/warns/per-source when --stats is on).
       --web-token=TOKEN    require ?token=TOKEN to access. Mandatory when
-                           --web binds to a non-loopback address.
+                           --web binds to a non-loopback address. Also
+                           required for /health and /metrics.
       --save=FILE          tee output to FILE in addition to stdout. ANSI
                            codes are stripped from the file. Overwrites.
       --save-append=FILE   like --save but appends to FILE if it exists.

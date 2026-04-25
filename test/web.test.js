@@ -145,6 +145,64 @@ test('makeWebTee: ANSI is converted to HTML before broadcast', () => {
   assert.equal(broadcasts[0], '<span class="a-red">error</span>');
 });
 
+test('GET /health returns JSON status', async () => {
+  const srv = await createWebServer({ bind: ':0', stderr: captureStream() });
+  try {
+    const res = await get(srv.url + 'health');
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'], /application\/json/);
+    const body = JSON.parse(res.body);
+    assert.equal(body.ok, true);
+    assert.ok(typeof body.uptime_seconds === 'number');
+    assert.equal(body.lines, 0);
+    assert.equal(body.subscribers, 0);
+  } finally { await srv.stop(); }
+});
+
+test('GET /metrics returns Prometheus text', async () => {
+  const srv = await createWebServer({ bind: ':0', stderr: captureStream() });
+  try {
+    srv.broadcast('foo');
+    srv.broadcast('bar');
+    const res = await get(srv.url + 'metrics');
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'], /text\/plain/);
+    assert.match(res.body, /wintail_uptime_seconds \d/);
+    assert.match(res.body, /wintail_lines_total 2/);
+    assert.match(res.body, /wintail_subscribers 0/);
+  } finally { await srv.stop(); }
+});
+
+test('GET /metrics includes provider extras (errors, warns, perSource)', async () => {
+  const srv = await createWebServer({
+    bind: ':0',
+    stderr: captureStream(),
+    metricsProvider: () => ({
+      errors: 5,
+      warns: 12,
+      perSource: new Map([['app.log', 100], ['db.log', 50]]),
+    }),
+  });
+  try {
+    const res = await get(srv.url + 'metrics');
+    assert.match(res.body, /wintail_errors_total 5/);
+    assert.match(res.body, /wintail_warns_total 12/);
+    assert.match(res.body, /wintail_lines_per_source\{source="app\.log"\} 100/);
+    assert.match(res.body, /wintail_lines_per_source\{source="db\.log"\} 50/);
+  } finally { await srv.stop(); }
+});
+
+test('formatPrometheus escapes label values', () => {
+  const { formatPrometheus } = require('../src/web.js');
+  const out = formatPrometheus({
+    uptimeSec: 0,
+    lineCount: 0,
+    subscriberCount: 0,
+    extra: { perSource: new Map([['has "quotes"\\back', 1]]) },
+  });
+  assert.match(out, /source="has \\"quotes\\"\\\\back"/);
+});
+
 test('SSE end-to-end: broadcast reaches a subscribed client', async () => {
   const srv = await createWebServer({ bind: ':0', stderr: captureStream() });
   try {

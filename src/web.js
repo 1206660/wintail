@@ -152,7 +152,45 @@ function htmlPage(title) {
 </body></html>`;
 }
 
-function createWebServer({ bind, token = null, title = 'live tail', stderr = process.stderr } = {}) {
+function escapePromLabel(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
+function formatPrometheus({ uptimeSec, lineCount, subscriberCount, extra = {} }) {
+  const lines = [
+    '# HELP wintail_uptime_seconds Server uptime in seconds.',
+    '# TYPE wintail_uptime_seconds gauge',
+    `wintail_uptime_seconds ${uptimeSec.toFixed(3)}`,
+    '# HELP wintail_lines_total Total lines broadcast since server start.',
+    '# TYPE wintail_lines_total counter',
+    `wintail_lines_total ${lineCount}`,
+    '# HELP wintail_subscribers Currently connected SSE subscribers.',
+    '# TYPE wintail_subscribers gauge',
+    `wintail_subscribers ${subscriberCount}`,
+  ];
+  if (extra && typeof extra === 'object') {
+    if (typeof extra.errors === 'number') {
+      lines.push('# HELP wintail_errors_total Lines matching the error pattern.');
+      lines.push('# TYPE wintail_errors_total counter');
+      lines.push(`wintail_errors_total ${extra.errors}`);
+    }
+    if (typeof extra.warns === 'number') {
+      lines.push('# HELP wintail_warns_total Lines matching the warning pattern.');
+      lines.push('# TYPE wintail_warns_total counter');
+      lines.push(`wintail_warns_total ${extra.warns}`);
+    }
+    if (extra.perSource && typeof extra.perSource.entries === 'function') {
+      lines.push('# HELP wintail_lines_per_source Total lines per source file.');
+      lines.push('# TYPE wintail_lines_per_source counter');
+      for (const [source, n] of extra.perSource.entries()) {
+        lines.push(`wintail_lines_per_source{source="${escapePromLabel(source)}"} ${n}`);
+      }
+    }
+  }
+  return lines.join('\n') + '\n';
+}
+
+function createWebServer({ bind, token = null, title = 'live tail', stderr = process.stderr, metricsProvider = null } = {}) {
   let host, port;
   try {
     ({ host, port } = parseBindSpec(bind));
@@ -165,6 +203,7 @@ function createWebServer({ bind, token = null, title = 'live tail', stderr = pro
 
   const subscribers = new Set();
   let lineCount = 0;
+  const startTime = Date.now();
 
   function broadcast(html) {
     lineCount++;
@@ -173,6 +212,28 @@ function createWebServer({ bind, token = null, title = 'live tail', stderr = pro
       try { res.write(data); }
       catch { subscribers.delete(res); }
     }
+  }
+
+  function uptimeSec() { return (Date.now() - startTime) / 1000; }
+
+  function getHealthJson() {
+    return {
+      ok: true,
+      uptime_seconds: uptimeSec(),
+      lines: lineCount,
+      subscribers: subscribers.size,
+      title,
+    };
+  }
+
+  function getMetricsText() {
+    const extra = metricsProvider ? metricsProvider() : {};
+    return formatPrometheus({
+      uptimeSec: uptimeSec(),
+      lineCount,
+      subscriberCount: subscribers.size,
+      extra: extra || {},
+    });
   }
 
   const server = http.createServer((req, res) => {
@@ -188,6 +249,16 @@ function createWebServer({ bind, token = null, title = 'live tail', stderr = pro
     if (u.pathname === '/' || u.pathname === '/index.html') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(htmlPage(title));
+      return;
+    }
+    if (u.pathname === '/health') {
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(getHealthJson()));
+      return;
+    }
+    if (u.pathname === '/metrics') {
+      res.writeHead(200, { 'content-type': 'text/plain; version=0.0.4' });
+      res.end(getMetricsText());
       return;
     }
     if (u.pathname === '/events') {
@@ -216,7 +287,8 @@ function createWebServer({ bind, token = null, title = 'live tail', stderr = pro
       resolve({
         url, host, port: actualPort,
         broadcast,
-        getStats: () => ({ subscribers: subscribers.size, lines: lineCount }),
+        getStats: () => ({ subscribers: subscribers.size, lines: lineCount, uptime_seconds: uptimeSec() }),
+        getHealthJson, getMetricsText,
         stop: () => new Promise((r) => server.close(() => r())),
       });
     });
@@ -244,4 +316,4 @@ function makeWebTee(stdout, webServer) {
   };
 }
 
-module.exports = { createWebServer, makeWebTee, ansiToHtml, parseBindSpec, isLoopback, htmlPage };
+module.exports = { createWebServer, makeWebTee, ansiToHtml, parseBindSpec, isLoopback, htmlPage, formatPrometheus };
