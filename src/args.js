@@ -87,6 +87,7 @@ function defaultOpts() {
     until: null,
     ue: false,
     dirGlob: '*.log',
+    addTimestamp: null,
   };
 }
 
@@ -194,6 +195,9 @@ function parseArgs(argv) {
           break;
         case 'dir-glob':
           opts.dirGlob = consumeValue('--dir-glob', inline);
+          break;
+        case 'add-timestamp':
+          opts.addTimestamp = inline === undefined ? 'time' : inline;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

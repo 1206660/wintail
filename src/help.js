@@ -56,6 +56,9 @@ Filter & display (v0.2):
                            continuations) are dimmed.
       --dir-glob=PATTERN   when a FILE arg is a directory, expand to files
                            matching PATTERN (default: *.log)
+      --add-timestamp[=FMT]
+                           prefix each line with current wall-clock time.
+                           FMT: time (HH:MM:SS, default), iso, epoch, epoch-ms
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

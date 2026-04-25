@@ -16,6 +16,7 @@ const { makeNotifier } = require('./transforms/notify.js');
 const { makePrettyJson } = require('./transforms/prettyJson.js');
 const { makeSinceFilter } = require('./transforms/since.js');
 const { makeUeFormatter } = require('./transforms/ue.js');
+const { makeAddTimestamp } = require('./transforms/addTimestamp.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -71,6 +72,11 @@ function buildPipeline(opts, stdout) {
 
   if (opts.prettyJson) transforms.push(makePrettyJson());
   if (opts.ue) transforms.push(makeUeFormatter({ enabled: colorEnabled }));
+
+  if (opts.addTimestamp) {
+    try { transforms.push(makeAddTimestamp({ format: opts.addTimestamp, color: colorEnabled })); }
+    catch (e) { throw new UsageError(e.message); }
+  }
 
   if (opts.lineNumber) transforms.push(makeLineNumberer());
 
