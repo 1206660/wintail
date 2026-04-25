@@ -118,6 +118,7 @@ function defaultOpts() {
     regexExtract: null,
     regexExtractKeepNonMatch: false,
     maxLines: 0,
+    prefix: null,
   };
 }
 
@@ -285,6 +286,9 @@ function parseArgs(argv) {
           break;
         case 'max-lines':
           opts.maxLines = parseIntOrThrow(consumeValue('--max-lines', inline), '--max-lines');
+          break;
+        case 'prefix':
+          opts.prefix = consumeValue('--prefix', inline);
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

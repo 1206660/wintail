@@ -70,6 +70,10 @@ Filter & display (v0.2):
                            don't count toward width.
       --max-lines=N        emit at most N lines (after all filters) then exit.
                            Useful with -f to capture a bounded live snapshot.
+      --prefix=TEMPLATE    prefix every line with TEMPLATE. Substitutions:
+                           {source} = file path, {time} = HH:MM:SS. Pairs
+                           well with multi-file -f instead of headers.
+                           Example: --prefix='[{source}] '
       --save=FILE          tee output to FILE in addition to stdout. ANSI
                            codes are stripped from the file. Overwrites.
       --save-append=FILE   like --save but appends to FILE if it exists.

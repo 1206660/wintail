@@ -26,6 +26,7 @@ const { makeJsonFilter } = require('./transforms/jsonFilter.js');
 const { makeJsonExtract } = require('./transforms/jsonExtract.js');
 const { makeRegexExtract } = require('./transforms/regexExtract.js');
 const { makeMaxLines } = require('./transforms/maxLines.js');
+const { makePrefix } = require('./transforms/prefix.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -120,6 +121,10 @@ function buildPipeline(opts, stdout, stderr) {
   if (opts.addTimestamp) {
     try { transforms.push(makeAddTimestamp({ format: opts.addTimestamp, color: colorEnabled })); }
     catch (e) { throw new UsageError(e.message); }
+  }
+
+  if (opts.prefix) {
+    transforms.push(makePrefix({ template: opts.prefix, color: colorEnabled }));
   }
 
   if (opts.lineNumber) transforms.push(makeLineNumberer());
