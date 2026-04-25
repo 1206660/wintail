@@ -32,6 +32,9 @@ Filter & display (v0.2):
                            by default, AND with --grep-and)
       --grep-and           require ALL --grep patterns to match (default OR)
       --grep-v=PATTERN     drop lines matching regex (repeatable)
+      --include-from=FILE  load --grep patterns from FILE (one per line; lines
+                           starting with # and blank lines are skipped)
+      --exclude-from=FILE  load --grep-v patterns from FILE (same format)
   -i, --ignore-case        case-insensitive --grep / --grep-v
   -N, --line-number        prefix each line with its 1-based line number
       --color={auto,always,never}

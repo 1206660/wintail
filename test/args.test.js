@@ -280,3 +280,35 @@ test('bundled -iN', () => {
   assert.equal(o.ignoreCase, true);
   assert.equal(o.lineNumber, true);
 });
+
+test('--include-from loads patterns from file', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const os = require('node:os');
+  const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'wintail-args-')), 'patterns.txt');
+  fs.writeFileSync(tmp, '# comment\nERROR\n\nWARN\n  Fatal  \n');
+  try {
+    const o = parseArgs(['--include-from', tmp, 'f']);
+    assert.deepEqual(o.grepPatterns, ['ERROR', 'WARN', 'Fatal']);
+  } finally {
+    fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
+  }
+});
+
+test('--exclude-from loads patterns to grepV', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const os = require('node:os');
+  const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'wintail-args-')), 'noise.txt');
+  fs.writeFileSync(tmp, 'heartbeat\nping\n');
+  try {
+    const o = parseArgs(['--exclude-from', tmp, 'f']);
+    assert.deepEqual(o.grepVPatterns, ['heartbeat', 'ping']);
+  } finally {
+    fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
+  }
+});
+
+test('--include-from missing file errors clearly', () => {
+  assert.throws(() => parseArgs(['--include-from', '/nope/missing.txt', 'f']), UsageError);
+});

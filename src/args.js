@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('node:fs');
+
 class UsageError extends Error {
   constructor(msg) {
     super(msg);
@@ -55,6 +57,19 @@ function parseIntOrThrow(s, flag) {
     throw new UsageError(`invalid integer for ${flag}: ${s}`);
   }
   return parseInt(s, 10);
+}
+
+function readPatternsFile(filePath, flag) {
+  let raw;
+  try { raw = fs.readFileSync(filePath, 'utf8'); }
+  catch (e) { throw new UsageError(`${flag}: cannot read '${filePath}': ${e.message}`); }
+  const out = [];
+  for (const rawLine of raw.split(/\r?\n/)) {
+    const trimmed = rawLine.trim();
+    if (trimmed === '' || trimmed.startsWith('#')) continue;
+    out.push(trimmed);
+  }
+  return out;
 }
 
 function validateColor(s) {
@@ -259,6 +274,12 @@ function parseArgs(argv) {
           break;
         case 'regex-extract-keep-non-match':
           opts.regexExtractKeepNonMatch = true;
+          break;
+        case 'include-from':
+          opts.grepPatterns.push(...readPatternsFile(consumeValue('--include-from', inline), '--include-from'));
+          break;
+        case 'exclude-from':
+          opts.grepVPatterns.push(...readPatternsFile(consumeValue('--exclude-from', inline), '--exclude-from'));
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
