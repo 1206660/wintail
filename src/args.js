@@ -94,6 +94,8 @@ function defaultOpts() {
     saveAppend: false,
     stripAnsi: false,
     collapseRepeats: false,
+    stats: false,
+    statsInterval: 10,
   };
 }
 
@@ -225,6 +227,14 @@ function parseArgs(argv) {
           break;
         case 'collapse-repeats':
           opts.collapseRepeats = true;
+          break;
+        case 'stats':
+          opts.stats = true;
+          if (inline !== undefined) {
+            const n = Number(inline);
+            if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --stats interval: ${inline}`);
+            opts.statsInterval = n;
+          }
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

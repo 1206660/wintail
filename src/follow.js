@@ -167,6 +167,9 @@ function startFollow(args) {
     if (args.pipeline && typeof args.pipeline.flush === 'function') {
       try { args.pipeline.flush(); } catch {}
     }
+    if (args.pipeline && args.pipeline.statsCollector) {
+      try { args.pipeline.statsCollector.stop(); } catch {}
+    }
     for (const s of args.files) {
       if (s.fd !== null) {
         try { fs.closeSync(s.fd); } catch {}

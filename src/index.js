@@ -21,6 +21,7 @@ const { makeTruncate } = require('./transforms/truncate.js');
 const { createTeeOutput } = require('./multiOut.js');
 const { makeStripAnsi } = require('./transforms/stripAnsi.js');
 const { makeCollapseRepeats } = require('./transforms/collapseRepeats.js');
+const { createStatsCollector } = require('./transforms/stats.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -31,11 +32,16 @@ function describeOpenError(e, file) {
   return `cannot open '${file}' for reading: ${e.message}`;
 }
 
-function buildPipeline(opts, stdout) {
+function buildPipeline(opts, stdout, stderr) {
   const transforms = [];
+  let statsCollector = null;
 
   if (opts.stripAnsi) transforms.push(makeStripAnsi());
   if (opts.collapseRepeats) transforms.push(makeCollapseRepeats());
+  if (opts.stats) {
+    statsCollector = createStatsCollector({ intervalSec: opts.statsInterval, stderr });
+    transforms.push(statsCollector.transform);
+  }
 
   if (opts.since !== null || opts.until !== null) {
     try {
@@ -96,7 +102,9 @@ function buildPipeline(opts, stdout) {
     transforms.push(makeTruncate({ width: opts.truncateWidth, stdout }));
   }
 
-  return createPipeline({ transforms, stdout });
+  const pipe = createPipeline({ transforms, stdout });
+  pipe.statsCollector = statsCollector;
+  return pipe;
 }
 
 async function main(argv, {
@@ -148,7 +156,7 @@ async function main(argv, {
   }
 
   let pipeline;
-  try { pipeline = buildPipeline(opts, outputTarget); }
+  try { pipeline = buildPipeline(opts, outputTarget, stderr); }
   catch (e) {
     if (e instanceof UsageError) {
       stderr.write(`wintail: ${e.message}\n`);
@@ -217,6 +225,7 @@ async function main(argv, {
   }
 
   if (opts.follow && followStates.length > 0) {
+    if (pipeline.statsCollector) pipeline.statsCollector.start();
     startFollow({
       files: followStates,
       lastEmittedPath,
@@ -230,6 +239,7 @@ async function main(argv, {
   }
 
   pipeline.flush();
+  if (pipeline.statsCollector) pipeline.statsCollector.report();
   if (exitCode !== 0) process.exit(exitCode);
 }
 

@@ -70,6 +70,9 @@ Filter & display (v0.2):
       --collapse-repeats   suppress consecutive identical lines and emit a
                            '[wintail: previous line repeated N times]' summary
                            when the streak ends (per source)
+      --stats[=N]          every N seconds (default 10) print to stderr a
+                           summary: total lines, errors, warnings, recent
+                           lines/sec, top files. Final summary on exit.
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

@@ -1,6 +1,6 @@
 {
   "name": "wintail",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "description": "Linux-style tail for PowerShell/Windows, with color/grep/glob/toast. Zero dependencies. npx-installable.",
   "bin": {
     "wintail": "./bin/wintail.js"
