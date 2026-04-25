@@ -216,3 +216,67 @@ test('rejects --encoding bogus', () => {
 test('-n 0 is valid (output nothing)', () => {
   assert.deepEqual(parseArgs(['-n', '0', 'f']).lines, { from: 'end', count: 0 });
 });
+
+// ---- v0.2 flags ----
+
+test('default color is auto', () => {
+  assert.equal(parseArgs([]).color, 'auto');
+});
+
+test('--color=always|never|auto', () => {
+  assert.equal(parseArgs(['--color=always']).color, 'always');
+  assert.equal(parseArgs(['--color=never']).color, 'never');
+  assert.equal(parseArgs(['--color=auto']).color, 'auto');
+});
+
+test('--no-color = never', () => {
+  assert.equal(parseArgs(['--no-color']).color, 'never');
+});
+
+test('--color rejects bogus value', () => {
+  assert.throws(() => parseArgs(['--color=neon']), UsageError);
+});
+
+test('--highlight collects multiple', () => {
+  const o = parseArgs(['--highlight=foo=red', '--highlight=bar=blue', 'f']);
+  assert.deepEqual(o.highlights, ['foo=red', 'bar=blue']);
+});
+
+test('--no-default-highlight', () => {
+  assert.equal(parseArgs(['--no-default-highlight']).noDefaultHighlight, true);
+});
+
+test('--grep accumulates', () => {
+  const o = parseArgs(['--grep=a', '--grep', 'b', 'f']);
+  assert.deepEqual(o.grepPatterns, ['a', 'b']);
+});
+
+test('-G short form', () => {
+  assert.deepEqual(parseArgs(['-G', 'foo', 'f']).grepPatterns, ['foo']);
+  assert.deepEqual(parseArgs(['-Gfoo', 'f']).grepPatterns, ['foo']);
+});
+
+test('--grep-v', () => {
+  assert.deepEqual(parseArgs(['--grep-v=noise', 'f']).grepVPatterns, ['noise']);
+});
+
+test('-N / --line-number', () => {
+  assert.equal(parseArgs(['-N', 'f']).lineNumber, true);
+  assert.equal(parseArgs(['--line-number', 'f']).lineNumber, true);
+});
+
+test('-i / --ignore-case', () => {
+  assert.equal(parseArgs(['-i', 'f']).ignoreCase, true);
+  assert.equal(parseArgs(['--ignore-case', 'f']).ignoreCase, true);
+});
+
+test('--notify-on accumulates', () => {
+  const o = parseArgs(['--notify-on=Fatal', '--notify-on', 'panic=Crash', 'f']);
+  assert.deepEqual(o.notifyPatterns, ['Fatal', 'panic=Crash']);
+});
+
+test('bundled -iN', () => {
+  const o = parseArgs(['-iN', 'f']);
+  assert.equal(o.ignoreCase, true);
+  assert.equal(o.lineNumber, true);
+});

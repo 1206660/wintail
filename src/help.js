@@ -27,6 +27,23 @@ Mandatory arguments to long options are mandatory for short options too.
   -h, --help               display this help and exit
   -V, --version            output version information and exit
 
+Filter & display (v0.2):
+  -G, --grep=PATTERN       only show lines matching regex (repeatable)
+      --grep-v=PATTERN     drop lines matching regex (repeatable)
+  -i, --ignore-case        case-insensitive --grep / --grep-v
+  -N, --line-number        prefix each line with its 1-based line number
+      --color={auto,always,never}
+                           color output. Default 'auto' (TTY + no NO_COLOR env)
+      --no-color           same as --color=never
+      --highlight=PAT=COLOR
+                           wrap regex matches with ANSI color (repeatable).
+                           COLOR: red,green,yellow,blue,magenta,cyan,white,
+                           dim,bold (combine with space: 'red bold')
+      --no-default-highlight  disable built-in ERROR/WARN/INFO/DEBUG colors
+      --notify-on=PAT[=TITLE]
+                           fire a Windows toast when a line matches (repeatable,
+                           throttled to 1/pattern/5s)
+
 NUM may have a multiplier suffix:
   b 512, k 1024, K 1024, M 1024*1024, G 1024*1024*1024.
 
@@ -38,7 +55,15 @@ Examples:
   wintail -f app.log             Follow appends (Ctrl-C to stop)
   wintail -F app.log             Follow by name (survives log rotation)
   wintail a.log b.log            Multiple files with headers
+  wintail *.log                  Glob (auto-expanded; ignored on PowerShell)
   Get-Content big.log | wintail  Tail from a pipe
+  wintail -G ERROR -F app.log    Live tail, only ERROR lines
+  wintail --grep-v noise -i app.log
+                                 Drop noisy lines (case-insensitive)
+  wintail --highlight 'panic=red bold' app.log
+                                 Custom highlight on top of built-ins
+  wintail --notify-on Fatal -F app.log
+                                 Toast on Fatal (Windows)
   wintail --install-alias        Make 'tail' work in PowerShell
 
 Project home: https://github.com/1206660/wintail

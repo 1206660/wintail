@@ -1,8 +1,8 @@
 # wintail
 
-Linux-style `tail` for PowerShell and Windows. Zero dependencies. `npx`-installable.
+Linux-style `tail` for PowerShell and Windows, plus color, grep, glob, toast notifications. Zero dependencies. `npx`-installable.
 
-PowerShell's built-in `Get-Content -Wait -Tail` is slow on big logs, doesn't follow log rotation, and feels nothing like `tail`. `wintail` is the `tail` you already know — `tail -f`, `tail -F`, `tail -n 100`, multi-file headers, all of it — running on Node.js with no native deps.
+PowerShell's built-in `Get-Content -Wait -Tail` is slow on big logs, doesn't follow log rotation, and feels nothing like `tail`. `wintail` is the `tail` you already know — `tail -f`, `tail -F`, `tail -n 100`, multi-file headers — plus a small set of log-reading ergonomics that GNU tail leaves to other tools (`grep`, `less -R`, custom shell pipes).
 
 ## Install
 
@@ -64,6 +64,19 @@ wintail [OPTION]... [FILE]...
 | `-h` / `--help` | Help |
 | `-V` / `--version` | Version |
 
+**Filter & display (v0.2)**
+
+| Flag | Meaning |
+|---|---|
+| `-G PAT` / `--grep=PAT` | Only show lines matching regex (repeatable; combine for AND… no, OR within `-G` and AND between `-G` and `--grep-v`) |
+| `--grep-v=PAT` | Drop matching lines (repeatable) |
+| `-i` / `--ignore-case` | Case-insensitive `--grep` / `--grep-v` |
+| `-N` / `--line-number` | Prefix each line with its 1-based number |
+| `--color={auto,always,never}` | Default `auto` (TTY + no `NO_COLOR`). `--no-color` = `never`. |
+| `--highlight=PAT=COLOR` | Wrap regex matches in ANSI color (repeatable). COLOR: `red green yellow blue magenta cyan white dim bold`, combine with space (`'red bold'`) |
+| `--no-default-highlight` | Disable built-in `ERROR`→red, `WARN`→yellow, `INFO`→cyan, `DEBUG`→dim |
+| `--notify-on=PAT[=TITLE]` | Windows toast on match (repeatable; throttled 1/pattern/5s) |
+
 `N` accepts multipliers: `b` (512), `k` (1024), `K` (1024), `M` (1024²), `G` (1024³).
 
 When `FILE` is `-` or omitted, reads stdin.
@@ -97,6 +110,21 @@ Get-Content big.log | wintail -n 5
 
 # Tail a UTF-16 LE log written by some Windows tools
 wintail --encoding=utf16le myapp.log
+
+# Live tail, only ERROR lines, with line numbers
+wintail -F -G ERROR -N app.log
+
+# Drop noisy lines case-insensitively
+wintail --grep-v 'heartbeat|ping' -i -F app.log
+
+# Custom highlight on top of built-ins
+wintail --highlight 'panic=red bold' --highlight 'TODO=yellow' app.log
+
+# Glob multiple files (PowerShell doesn't auto-expand for tail)
+wintail -F *.log
+
+# Toast me when something Fatal hits the log
+wintail --notify-on 'Fatal' --notify-on 'OutOfMemory=Crash!' -F app.log
 ```
 
 ## How `-f` and `-F` differ

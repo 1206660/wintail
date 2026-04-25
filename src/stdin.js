@@ -48,7 +48,7 @@ function stripBomFromBuffer(buf, opts) {
   return { buf: buf.subarray(bom.length), encoding: bom.encoding };
 }
 
-function readStdinTail(opts, stdin = process.stdin, stdout = process.stdout) {
+function readStdinTail(opts, stdin, pipelineOrStdout, sourceName = 'standard input') {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let totalLen = 0;
@@ -72,7 +72,13 @@ function readStdinTail(opts, stdin = process.stdin, stdout = process.stdout) {
         } else {
           outBuf = computeTailFromBuffer(all, opts);
         }
-        stdout.write(outBuf, resolve);
+        // Detect pipeline (has writeChunk) vs raw stream
+        if (typeof pipelineOrStdout.writeChunk === 'function') {
+          pipelineOrStdout.writeChunk(outBuf, sourceName);
+          resolve();
+        } else {
+          pipelineOrStdout.write(outBuf, resolve);
+        }
       } catch (err) { reject(err); }
     });
     stdin.on('error', reject);

@@ -21,11 +21,12 @@ function openSafe(p) {
   }
 }
 
-function makeHeaderEmitter(stdout, lastEmittedPath, showHeaders) {
+function makeHeaderEmitter(stdout, lastEmittedPath, showHeaders, pipeline) {
   let last = lastEmittedPath;
   return function emit(path) {
     if (!showHeaders) return;
     if (last === path) return;
+    if (pipeline && typeof pipeline.flush === 'function') pipeline.flush();
     const prefix = last !== null ? '\n' : '';
     stdout.write(`${prefix}==> ${path} <==\n`);
     last = path;
@@ -44,15 +45,16 @@ function readAllFrom(fd, fromOffset, toSize) {
   return buf.subarray(0, read);
 }
 
-function writeChunk(stdout, slice, encoding) {
-  if (encoding === 'utf16le' || encoding === 'utf16be') {
-    stdout.write(Buffer.from(decodeChunk(slice, encoding), 'utf8'));
-  } else {
-    stdout.write(slice);
-  }
+function writeChunk(target, slice, encoding, source) {
+  // target may be a stream (legacy) or a pipeline ({ writeChunk })
+  const buf = (encoding === 'utf16le' || encoding === 'utf16be')
+    ? Buffer.from(decodeChunk(slice, encoding), 'utf8')
+    : slice;
+  if (target && typeof target.writeChunk === 'function') target.writeChunk(buf, source);
+  else target.write(buf);
 }
 
-function reopenAndReadAll(state, stdout, stderr, emitHeader, msg) {
+function reopenAndReadAll(state, target, stderr, emitHeader, msg) {
   const newFd = openSafe(state.path);
   if (!newFd) {
     state.fd = null;
@@ -70,17 +72,17 @@ function reopenAndReadAll(state, stdout, stderr, emitHeader, msg) {
   if (ns.size > 0) {
     emitHeader(state.path);
     const slice = readAllFrom(newFd, 0, ns.size);
-    writeChunk(stdout, slice, state.encoding);
+    writeChunk(target, slice, state.encoding, state.path);
     state.offset = ns.size;
   }
 }
 
-function pollFile(state, stdout, stderr, opts, emitHeader) {
+function pollFile(state, target, stderr, opts, emitHeader) {
   // Case 1: no current fd (only happens with -F)
   if (state.fd === null) {
     if (opts.follow !== 'name') return;
     if (statSafe(state.path)) {
-      reopenAndReadAll(state, stdout, stderr, emitHeader,
+      reopenAndReadAll(state, target, stderr, emitHeader,
         `wintail: '${state.path}' has appeared; following new file\n`);
     }
     return;
@@ -120,7 +122,7 @@ function pollFile(state, stdout, stderr, opts, emitHeader) {
   if (fdStat.size > state.offset) {
     emitHeader(state.path);
     const slice = readAllFrom(state.fd, state.offset, fdStat.size);
-    writeChunk(stdout, slice, state.encoding);
+    writeChunk(target, slice, state.encoding, state.path);
     state.offset += slice.length;
     state.size = fdStat.size;
     state.mtimeMs = fdStat.mtimeMs;
@@ -133,17 +135,18 @@ function pollFile(state, stdout, stderr, opts, emitHeader) {
       Math.abs(pathStat.mtimeMs - fdStat.mtimeMs) > 1;
     if (replaced) {
       try { fs.closeSync(state.fd); } catch {}
-      reopenAndReadAll(state, stdout, stderr, emitHeader,
+      reopenAndReadAll(state, target, stderr, emitHeader,
         `wintail: '${state.path}' has been replaced; following new file\n`);
     }
   }
 }
 
-function makeTicker({ files, lastEmittedPath, showHeaders, opts, stdout = process.stdout, stderr = process.stderr }) {
-  const emitHeader = makeHeaderEmitter(stdout, lastEmittedPath, showHeaders);
+function makeTicker({ files, lastEmittedPath, showHeaders, opts, pipeline, stdout = process.stdout, stderr = process.stderr }) {
+  const target = pipeline || stdout;
+  const emitHeader = makeHeaderEmitter(stdout, lastEmittedPath, showHeaders, pipeline);
   return function tickOnce() {
     for (const state of files) {
-      try { pollFile(state, stdout, stderr, opts, emitHeader); }
+      try { pollFile(state, target, stderr, opts, emitHeader); }
       catch (e) {
         stderr.write(`wintail: ${state.path}: ${e.message}\n`);
       }
@@ -161,6 +164,9 @@ function startFollow(args) {
     if (stopped) return;
     stopped = true;
     clearInterval(handle);
+    if (args.pipeline && typeof args.pipeline.flush === 'function') {
+      try { args.pipeline.flush(); } catch {}
+    }
     for (const s of args.files) {
       if (s.fd !== null) {
         try { fs.closeSync(s.fd); } catch {}

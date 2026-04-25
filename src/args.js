@@ -57,6 +57,11 @@ function parseIntOrThrow(s, flag) {
   return parseInt(s, 10);
 }
 
+function validateColor(s) {
+  if (s === 'auto' || s === 'always' || s === 'never') return s;
+  throw new UsageError(`invalid --color value: ${s} (expected auto|always|never)`);
+}
+
 function defaultOpts() {
   return {
     mode: 'tail',
@@ -69,6 +74,14 @@ function defaultOpts() {
     sleepInterval: 1.0,
     pid: null,
     encoding: 'utf8',
+    color: 'auto',
+    highlights: [],
+    noDefaultHighlight: false,
+    grepPatterns: [],
+    grepVPatterns: [],
+    ignoreCase: false,
+    lineNumber: false,
+    notifyPatterns: [],
   };
 }
 
@@ -135,6 +148,33 @@ function parseArgs(argv) {
         case 'encoding':
           opts.encoding = normalizeEncoding(consumeValue('--encoding', inline));
           break;
+        case 'color':
+          opts.color = inline === undefined ? 'auto' : validateColor(inline);
+          break;
+        case 'no-color':
+          opts.color = 'never';
+          break;
+        case 'highlight':
+          opts.highlights.push(consumeValue('--highlight', inline));
+          break;
+        case 'no-default-highlight':
+          opts.noDefaultHighlight = true;
+          break;
+        case 'grep':
+          opts.grepPatterns.push(consumeValue('--grep', inline));
+          break;
+        case 'grep-v':
+          opts.grepVPatterns.push(consumeValue('--grep-v', inline));
+          break;
+        case 'ignore-case':
+          opts.ignoreCase = true;
+          break;
+        case 'line-number':
+          opts.lineNumber = true;
+          break;
+        case 'notify-on':
+          opts.notifyPatterns.push(consumeValue('--notify-on', inline));
+          break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
       }
@@ -179,6 +219,15 @@ function parseArgs(argv) {
           j = body.length;
           break;
         }
+        case 'G': {
+          const tail = body.slice(j + 1);
+          const val = tail !== '' ? tail : consumeValue('-G');
+          opts.grepPatterns.push(val);
+          j = body.length;
+          break;
+        }
+        case 'N': opts.lineNumber = true; j++; break;
+        case 'i': opts.ignoreCase = true; j++; break;
         default:
           throw new UsageError(`unrecognized option '-${c}'`);
       }
