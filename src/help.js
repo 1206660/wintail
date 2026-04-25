@@ -34,6 +34,9 @@ Mandatory arguments to long options are mandatory for short options too.
                            (handles duplicate-count differences). Common lines
                            hidden unless --diff-show-common.
       --diff-show-common   include common lines (prefixed ' ') in --diff output
+      --reverse            print collected lines newest-first. Combine with
+                           -n N for "last N, newest first". Only meaningful
+                           in non-follow mode.
       --plugin=PATH        load a custom JS transform from PATH (CommonJS).
                            Module exports: function(line, ctx) ⇒ string|null,
                            or { transform }, or array of functions.

@@ -46,6 +46,7 @@ const { createSummary } = require('./transforms/summary.js');
 const { makeLimitBytes } = require('./transforms/limitBytes.js');
 const { emitDiff } = require('./diff.js');
 const { loadPlugins } = require('./plugin.js');
+const { reverseBuffer } = require('./transforms/reverse.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -437,6 +438,7 @@ async function main(argv, {
     }
 
     emitHeader(f);
+    if (opts.reverse && buf.length > 0) buf = reverseBuffer(buf);
     if (buf.length > 0) pipeline.writeChunk(buf, f);
 
     if (opts.follow) {

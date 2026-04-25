@@ -146,6 +146,7 @@ function defaultOpts() {
     diffShowCommon: false,
     limitBytes: 0,
     plugins: [],
+    reverse: false,
   };
 }
 
@@ -459,6 +460,9 @@ function parseArgs(argv, baseOpts = null) {
         }
         case 'plugin':
           opts.plugins.push(consumeValue('--plugin', inline));
+          break;
+        case 'reverse':
+          opts.reverse = true;
           break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
