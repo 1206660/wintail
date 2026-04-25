@@ -90,6 +90,8 @@ function defaultOpts() {
     addTimestamp: null,
     truncate: false,
     truncateWidth: null,
+    save: null,
+    saveAppend: false,
   };
 }
 
@@ -208,6 +210,13 @@ function parseArgs(argv) {
             if (!Number.isFinite(n) || n <= 0) throw new UsageError(`invalid --truncate width: ${inline}`);
             opts.truncateWidth = n;
           }
+          break;
+        case 'save':
+          opts.save = consumeValue('--save', inline);
+          break;
+        case 'save-append':
+          opts.save = consumeValue('--save-append', inline);
+          opts.saveAppend = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

@@ -18,6 +18,7 @@ const { makeSinceFilter } = require('./transforms/since.js');
 const { makeUeFormatter } = require('./transforms/ue.js');
 const { makeAddTimestamp } = require('./transforms/addTimestamp.js');
 const { makeTruncate } = require('./transforms/truncate.js');
+const { createTeeOutput } = require('./multiOut.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -131,8 +132,18 @@ async function main(argv, {
     }
   }
 
+  // Wrap stdout with file-tee if --save
+  let outputTarget = stdout;
+  if (opts.save) {
+    try { outputTarget = createTeeOutput(stdout, opts.save, { append: opts.saveAppend }); }
+    catch (e) {
+      stderr.write(`wintail: cannot save to '${opts.save}': ${e.message}\n`);
+      process.exit(1);
+    }
+  }
+
   let pipeline;
-  try { pipeline = buildPipeline(opts, stdout); }
+  try { pipeline = buildPipeline(opts, outputTarget); }
   catch (e) {
     if (e instanceof UsageError) {
       stderr.write(`wintail: ${e.message}\n`);
@@ -152,7 +163,7 @@ async function main(argv, {
     if (lastEmittedPath === name) return;
     pipeline.flush();
     const prefix = lastEmittedPath !== null ? '\n' : '';
-    stdout.write(`${prefix}==> ${name} <==\n`);
+    outputTarget.write(`${prefix}==> ${name} <==\n`);
     lastEmittedPath = name;
   };
 
@@ -207,7 +218,7 @@ async function main(argv, {
       showHeaders,
       opts,
       pipeline,
-      stdout,
+      stdout: outputTarget,
       stderr,
     });
     return;

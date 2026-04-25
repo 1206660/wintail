@@ -62,6 +62,9 @@ Filter & display (v0.2):
       --truncate[=WIDTH]   truncate each line to WIDTH visible chars (default
                            = terminal width or 80) and append '…'. ANSI codes
                            don't count toward width.
+      --save=FILE          tee output to FILE in addition to stdout. ANSI
+                           codes are stripped from the file. Overwrites.
+      --save-append=FILE   like --save but appends to FILE if it exists.
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).
