@@ -143,6 +143,8 @@ function defaultOpts() {
     summary: false,
     summaryTop: 10,
     summaryNoNormalize: false,
+    diffShowCommon: false,
+    limitBytes: 0,
   };
 }
 
@@ -441,6 +443,19 @@ function parseArgs(argv, baseOpts = null) {
         case 'summary-no-normalize':
           opts.summaryNoNormalize = true;
           break;
+        case 'diff':
+          opts.mode = 'diff';
+          break;
+        case 'diff-show-common':
+          opts.diffShowCommon = true;
+          break;
+        case 'limit-bytes': {
+          const v = consumeValue('--limit-bytes', inline);
+          const n = parseInt(v, 10);
+          if (!Number.isFinite(n) || n < 0) throw new UsageError(`invalid --limit-bytes: ${v}`);
+          opts.limitBytes = n;
+          break;
+        }
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded
           break;

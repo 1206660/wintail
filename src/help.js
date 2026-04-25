@@ -29,6 +29,11 @@ Mandatory arguments to long options are mandatory for short options too.
       --install-alias      add 'Set-Alias tail wintail' to your PowerShell
                              \$PROFILE so 'tail' calls wintail (Windows only)
       --uninstall-alias    remove the line added by --install-alias
+      --diff               compare two files: lines only in A prefixed '-',
+                           lines only in B prefixed '+'. Multi-set aware
+                           (handles duplicate-count differences). Common lines
+                           hidden unless --diff-show-common.
+      --diff-show-common   include common lines (prefixed ' ') in --diff output
       --history            list the last 20 wintail invocations
       --resume[=N]         interactively pick from the last 5 unique commands
                            and re-run it. With =N, re-run that index directly
@@ -126,6 +131,7 @@ Filter & display (v0.2):
                            don't count toward width.
       --max-lines=N        emit at most N lines (after all filters) then exit.
                            Useful with -f to capture a bounded live snapshot.
+      --limit-bytes=N      emit at most N bytes (after all filters) then exit.
       --prefix=TEMPLATE    prefix every line with TEMPLATE. Substitutions:
                            {source} = file path, {time} = HH:MM:SS. Pairs
                            well with multi-file -f instead of headers.

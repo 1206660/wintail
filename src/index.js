@@ -43,6 +43,8 @@ const { makeExitCodeWatcher } = require('./exitCodeOnMatch.js');
 const { makeShowNonPrinting } = require('./transforms/showNonPrinting.js');
 const { makeGrepWithContext } = require('./transforms/grepContext.js');
 const { createSummary } = require('./transforms/summary.js');
+const { makeLimitBytes } = require('./transforms/limitBytes.js');
+const { emitDiff } = require('./diff.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -198,6 +200,9 @@ function buildPipeline(opts, stdout, stderr) {
   if (opts.maxLines > 0) {
     transforms.push(makeMaxLines({ limit: opts.maxLines }));
   }
+  if (opts.limitBytes > 0) {
+    transforms.push(makeLimitBytes({ limit: opts.limitBytes }));
+  }
 
   const translateInput = opts.nullData
     ? (s) => s.indexOf('\0') === -1 ? s : s.replace(/\0/g, '\n')
@@ -247,6 +252,23 @@ async function main(argv, {
   }
   if (opts.mode === 'history') {
     listHistory({ stdout });
+    return;
+  }
+  if (opts.mode === 'diff') {
+    if (opts.files.length !== 2) {
+      stderr.write('wintail: --diff requires exactly two FILE arguments\n');
+      process.exit(2);
+    }
+    try {
+      emitDiff(opts.files[0], opts.files[1], {
+        showCommon: opts.diffShowCommon,
+        color: resolveColorMode(opts, stdout),
+        write: (s) => stdout.write(s),
+      });
+    } catch (e) {
+      stderr.write(`wintail: ${e.message}\n`);
+      process.exit(1);
+    }
     return;
   }
   if (opts.mode === 'completion') {
