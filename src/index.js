@@ -13,6 +13,7 @@ const { makeHighlighter, parseUserHighlights } = require('./transforms/highlight
 const { makeGrep } = require('./transforms/grep.js');
 const { makeLineNumberer } = require('./transforms/lineNumber.js');
 const { makeNotifier } = require('./transforms/notify.js');
+const { makePrettyJson } = require('./transforms/prettyJson.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -56,6 +57,8 @@ function buildPipeline(opts, stdout) {
       enabled: true,
     }));
   }
+
+  if (opts.prettyJson) transforms.push(makePrettyJson());
 
   if (opts.lineNumber) transforms.push(makeLineNumberer());
 

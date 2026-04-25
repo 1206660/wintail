@@ -43,6 +43,7 @@ Filter & display (v0.2):
       --notify-on=PAT[=TITLE]
                            fire a Windows toast when a line matches (repeatable,
                            throttled to 1/pattern/5s)
+      --pretty-json        if a line is valid JSON, pretty-print it (2-space)
 
 NUM may have a multiplier suffix:
   b 512, k 1024, K 1024, M 1024*1024, G 1024*1024*1024.

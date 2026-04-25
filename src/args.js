@@ -82,6 +82,7 @@ function defaultOpts() {
     ignoreCase: false,
     lineNumber: false,
     notifyPatterns: [],
+    prettyJson: false,
   };
 }
 
@@ -174,6 +175,9 @@ function parseArgs(argv) {
           break;
         case 'notify-on':
           opts.notifyPatterns.push(consumeValue('--notify-on', inline));
+          break;
+        case 'pretty-json':
+          opts.prettyJson = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);
