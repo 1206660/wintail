@@ -31,6 +31,10 @@ Mandatory arguments to long options are mandatory for short options too.
                            (1 = oldest, 5 = newest). Stored at
                            %LOCALAPPDATA%/wintail/history.jsonl on Windows or
                            ~/.wintail/history.jsonl elsewhere.
+      --completion=SHELL   print a tab-completion script. SHELL is one of
+                           powershell, bash, or zsh.
+                           Install: wintail --completion=powershell |
+                                    Out-String | Invoke-Expression
   -h, --help               display this help and exit
   -V, --version            output version information and exit
 

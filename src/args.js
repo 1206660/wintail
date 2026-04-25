@@ -159,6 +159,11 @@ function parseArgs(argv) {
         case 'install-alias': opts.mode = 'install-alias'; return opts;
         case 'uninstall-alias': opts.mode = 'uninstall-alias'; return opts;
         case 'history': opts.mode = 'history'; return opts;
+        case 'completion': {
+          opts.mode = 'completion';
+          opts.completionShell = inline !== undefined ? inline : consumeValue('--completion');
+          return opts;
+        }
         case 'resume': {
           opts.mode = 'resume';
           if (inline !== undefined) {

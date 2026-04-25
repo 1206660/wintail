@@ -30,6 +30,7 @@ const { makePrefix } = require('./transforms/prefix.js');
 const { startMarker } = require('./marker.js');
 const { createWebServer, makeWebTee } = require('./web.js');
 const { recordInvocation, listHistory, pickFromHistory } = require('./history.js');
+const { generate: generateCompletion } = require('./completions.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -176,6 +177,14 @@ async function main(argv, {
   }
   if (opts.mode === 'history') {
     listHistory({ stdout });
+    return;
+  }
+  if (opts.mode === 'completion') {
+    try { stdout.write(generateCompletion(opts.completionShell)); }
+    catch (e) {
+      stderr.write(`wintail: ${e.message}\n`);
+      process.exit(2);
+    }
     return;
   }
   if (opts.mode === 'resume') {
