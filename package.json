@@ -1,0 +1,40 @@
+{
+  "name": "wintail",
+  "version": "0.1.0",
+  "description": "Linux-style tail for PowerShell/Windows. Zero dependencies. npx-installable.",
+  "bin": {
+    "wintail": "./bin/wintail.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "tail",
+    "tail-f",
+    "windows",
+    "powershell",
+    "log",
+    "follow",
+    "logs",
+    "cli"
+  ],
+  "author": "1206660 <1206660@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1206660/wintail.git"
+  },
+  "bugs": {
+    "url": "https://github.com/1206660/wintail/issues"
+  },
+  "homepage": "https://github.com/1206660/wintail#readme"
+}
