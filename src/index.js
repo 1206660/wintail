@@ -15,6 +15,7 @@ const { makeLineNumberer } = require('./transforms/lineNumber.js');
 const { makeNotifier } = require('./transforms/notify.js');
 const { makePrettyJson } = require('./transforms/prettyJson.js');
 const { makeSinceFilter } = require('./transforms/since.js');
+const { makeUeFormatter } = require('./transforms/ue.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -69,6 +70,7 @@ function buildPipeline(opts, stdout) {
   }
 
   if (opts.prettyJson) transforms.push(makePrettyJson());
+  if (opts.ue) transforms.push(makeUeFormatter({ enabled: colorEnabled }));
 
   if (opts.lineNumber) transforms.push(makeLineNumberer());
 

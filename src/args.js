@@ -85,6 +85,7 @@ function defaultOpts() {
     prettyJson: false,
     since: null,
     until: null,
+    ue: false,
   };
 }
 
@@ -186,6 +187,9 @@ function parseArgs(argv) {
           break;
         case 'until':
           opts.until = consumeValue('--until', inline);
+          break;
+        case 'ue':
+          opts.ue = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

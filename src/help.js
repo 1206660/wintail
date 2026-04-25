@@ -49,6 +49,11 @@ Filter & display (v0.2):
                            ISO 8601, UE format. Lines without a timestamp
                            inherit the previous line's (so stack traces stay).
       --until=SPEC         only show lines whose timestamp is <= SPEC
+      --ue                 Unreal Engine log mode: color each Channel
+                           deterministically; color Severity (Error red bold,
+                           Warning yellow, Fatal magenta bold, Verbose dim);
+                           dim ts/frame brackets. Indented lines (likely stack
+                           continuations) are dimmed.
 
 NUM may have a multiplier suffix:
   b 512, k 1024, K 1024, M 1024*1024, G 1024*1024*1024.
