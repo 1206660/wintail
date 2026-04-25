@@ -2,6 +2,8 @@
 
 `tail` for PowerShell and Windows. Behaves like GNU `tail` but adds color, grep, JSON filtering, time-window slicing, Unreal Engine log mode, Windows toast notifications, and 25+ other flags. **Zero dependencies, single `npx` command.**
 
+![wintail demo](./docs/demo.gif)
+
 ```powershell
 npx github:1206660/wintail app.log              # last 10 lines
 npx github:1206660/wintail -F -G ERROR app.log  # follow, only errors, in red
