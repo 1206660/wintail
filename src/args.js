@@ -93,6 +93,7 @@ function defaultOpts() {
     save: null,
     saveAppend: false,
     stripAnsi: false,
+    collapseRepeats: false,
   };
 }
 
@@ -221,6 +222,9 @@ function parseArgs(argv) {
           break;
         case 'strip-ansi':
           opts.stripAnsi = true;
+          break;
+        case 'collapse-repeats':
+          opts.collapseRepeats = true;
           break;
         default:
           throw new UsageError(`unrecognized option '--${name}'`);

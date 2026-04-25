@@ -67,6 +67,9 @@ Filter & display (v0.2):
       --save-append=FILE   like --save but appends to FILE if it exists.
       --strip-ansi         remove pre-existing ANSI escape codes from input
                            lines (runs first in the pipeline)
+      --collapse-repeats   suppress consecutive identical lines and emit a
+                           '[wintail: previous line repeated N times]' summary
+                           when the streak ends (per source)
 
 .gz files are auto-decompressed (read mode only; -f/-F rejected since gz
 files do not grow).

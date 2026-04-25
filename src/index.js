@@ -20,6 +20,7 @@ const { makeAddTimestamp } = require('./transforms/addTimestamp.js');
 const { makeTruncate } = require('./transforms/truncate.js');
 const { createTeeOutput } = require('./multiOut.js');
 const { makeStripAnsi } = require('./transforms/stripAnsi.js');
+const { makeCollapseRepeats } = require('./transforms/collapseRepeats.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -34,6 +35,7 @@ function buildPipeline(opts, stdout) {
   const transforms = [];
 
   if (opts.stripAnsi) transforms.push(makeStripAnsi());
+  if (opts.collapseRepeats) transforms.push(makeCollapseRepeats());
 
   if (opts.since !== null || opts.until !== null) {
     try {
