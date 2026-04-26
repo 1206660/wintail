@@ -10,6 +10,20 @@ npx github:1206660/wintail -F -G ERROR app.log  # follow, only errors, in red
 npx github:1206660/wintail -F app.log --web=:8080  # browser-based live tail
 ```
 
+### More demos
+
+**Browser-based live tail** — `wintail -F app.log --web=:8080` (terminal & browser sync over SSE; ANSI translated to HTML; browser-side filter)
+
+![web demo](./docs/demo-web.gif)
+
+**JSONL filter & extract** — `--json-filter level=error --json-extract '[{ts}] [{level}] {service} → {msg}'` (raw JSONL → clean projected lines)
+
+![json demo](./docs/demo-json.gif)
+
+**UE log triage with on-exit summary** — `wintail --ue --summary <Project>.log` (UE channel/severity colors during stream; pattern-normalized top-N table on Ctrl-C)
+
+![summary demo](./docs/demo-summary.gif)
+
 PowerShell's built-in `Get-Content -Wait -Tail` is slow on big logs, doesn't follow log rotation, and lacks every feature you reach for from real `tail`. `wintail` is the `tail` you already know — `tail -f`, `tail -F`, `tail -n 100`, multi-file headers — and then 50+ more flags for live log reading.
 
 ---
