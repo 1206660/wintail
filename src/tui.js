@@ -11,14 +11,18 @@ const RESET_REGION = `${ESC}[r`;
 const setScrollRegion = (top, bottom) => `${ESC}[${top};${bottom}r`;
 const moveTo = (row, col) => `${ESC}[${row};${col}H`;
 
-function detectSupport(stdout = process.stdout) {
+function detectSupport(stdout = process.stdout, platform = process.platform) {
   if (!stdout || !stdout.isTTY) return false;
   if (process.env.WINTAIL_NO_TUI === '1') return false;
-  if (process.env.WT_SESSION) return true;
+  if (process.env.WT_SESSION) return true;                        // Windows Terminal
   if (process.env.WEZTERM_EXECUTABLE) return true;
-  if (process.env.TERM_PROGRAM) return true;
+  if (process.env.TERM_PROGRAM) return true;                      // iTerm2 / Apple Terminal / VSCode
   const term = process.env.TERM || '';
   if (term.includes('xterm') || term.includes('color') || term === 'tmux' || term.includes('screen')) return true;
+  // Modern Windows console host (Win10 1607+) supports VT escape sequences
+  // including DECSTBM scroll region. PowerShell + plain conhost doesn't set
+  // any of the env vars above but still works.
+  if (platform === 'win32') return true;
   return false;
 }
 

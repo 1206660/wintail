@@ -107,6 +107,34 @@ test('detectSupport: WT_SESSION enables (Windows Terminal)', () => {
   }
 });
 
+test('detectSupport: bare PowerShell / conhost on Windows still enables', () => {
+  // No env signals — relying on platform fallback.
+  // Save and clear all the env signals to simulate plain conhost.
+  const saved = {
+    WT_SESSION: process.env.WT_SESSION,
+    WEZTERM_EXECUTABLE: process.env.WEZTERM_EXECUTABLE,
+    TERM_PROGRAM: process.env.TERM_PROGRAM,
+    TERM: process.env.TERM,
+    WINTAIL_NO_TUI: process.env.WINTAIL_NO_TUI,
+  };
+  delete process.env.WT_SESSION;
+  delete process.env.WEZTERM_EXECUTABLE;
+  delete process.env.TERM_PROGRAM;
+  delete process.env.TERM;
+  delete process.env.WINTAIL_NO_TUI;
+  try {
+    // Pass platform='win32' explicitly so the test isn't host-dependent
+    assert.equal(detectSupport({ isTTY: true }, 'win32'), true);
+    // And assert that on Linux without env signals it still returns false
+    assert.equal(detectSupport({ isTTY: true }, 'linux'), false);
+  } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+});
+
 test('createTui: unsupported returns no-op object', () => {
   const fake = { isTTY: false };
   const tui = createTui({ stdout: fake });

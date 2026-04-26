@@ -1,6 +1,6 @@
 {
   "name": "wintail",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tail for PowerShell/Windows. GNU compatible + color, grep, JSON filter, --since, --ue, --pretty-json, --notify-on Windows toast, browser-based --web SSE, --tui top-right HUD, and 50+ more flags. Zero dependencies.",
   "bin": {
     "wintail": "./bin/wintail.js"
