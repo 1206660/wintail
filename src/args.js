@@ -151,6 +151,8 @@ function defaultOpts() {
     exec: null,
     execConcurrent: 4,
     unique: false,
+    tui: false,
+    tuiForce: false,
   };
 }
 
@@ -483,6 +485,13 @@ function parseArgs(argv, baseOpts = null) {
         }
         case 'unique':
           opts.unique = true;
+          break;
+        case 'tui':
+          opts.tui = true;
+          break;
+        case 'tui-force':
+          opts.tui = true;
+          opts.tuiForce = true;
           break;
         case 'config':
           consumeValue('--config', inline);  // pre-scanned, already loaded

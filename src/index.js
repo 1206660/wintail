@@ -50,6 +50,7 @@ const { reverseBuffer } = require('./transforms/reverse.js');
 const { loadCheckpoint, applyToStates, startFlusher } = require('./checkpoint.js');
 const { makeExec } = require('./transforms/exec.js');
 const { makeUnique } = require('./transforms/unique.js');
+const { createTui } = require('./tui.js');
 
 const STDIN_NAME = 'standard input';
 
@@ -492,6 +493,62 @@ async function main(argv, {
       const origExit = process.exit;
       process.on('exit', () => { try { checkpointFlusher.stop(); } catch {} });
     }
+
+    // --tui needs a line counter; hook a synthetic stats collector if --stats
+    // wasn't already enabled. Then start the TUI overlay.
+    let tui = null;
+    let tuiInterval = null;
+    let tuiCollector = pipeline.statsCollector;
+    if (opts.tui) {
+      if (!tuiCollector) {
+        const { createStatsCollector } = require('./transforms/stats.js');
+        tuiCollector = createStatsCollector({ intervalSec: 9999, stderr });  // never auto-prints
+        // splice transform near end of pipeline
+        // (we can't re-build pipeline; instead we monkey-add it as a final tap)
+        const origWriteChunk = pipeline.writeChunk;
+        pipeline.writeChunk = (chunk, source) => {
+          // Count lines in chunk
+          const text = typeof chunk === 'string' ? chunk : chunk.toString('utf8');
+          const lines = text.split('\n');
+          for (let i = 0; i < lines.length - 1; i++) {
+            tuiCollector.transform(lines[i], { source, getState: () => ({}) });
+          }
+          if (lines[lines.length - 1] !== '') {
+            tuiCollector.transform(lines[lines.length - 1], { source, getState: () => ({}) });
+          }
+          origWriteChunk(chunk, source);
+        };
+      }
+      tui = createTui({ stdout, stderr, force: opts.tuiForce });
+      if (tui.supported) {
+        tui.enter();
+        const startedAt = Date.now();
+        const repaint = () => {
+          const snap = tuiCollector.snapshot();
+          tui.repaint({
+            files: followStates.map(s => s.path),
+            total: snap.total,
+            ratePerSec: snap.rateRecent || snap.rateAvg || 0,
+            errors: snap.errors,
+            warns: snap.warns,
+            startedAt,
+          });
+        };
+        repaint();
+        tuiInterval = setInterval(repaint, 1000);
+        if (tuiInterval.unref) tuiInterval.unref();
+        const cleanup = () => {
+          if (tuiInterval) { clearInterval(tuiInterval); tuiInterval = null; }
+          tui.exit();
+        };
+        process.on('SIGINT', cleanup);
+        process.on('SIGTERM', cleanup);
+        process.on('exit', cleanup);
+      } else {
+        stderr.write('wintail: --tui not supported by this terminal; running without HUD\n');
+      }
+    }
+
     if (pipeline.statsCollector) pipeline.statsCollector.start();
     let marker = null;
     if (opts.mark > 0) {

@@ -43,6 +43,14 @@ Mandatory arguments to long options are mandatory for short options too.
                            lines). Auto-saved every 2s and on clean exit.
       --unique             drop lines previously seen in this stream
                            (per source). Capped at 100k unique keys.
+      --tui                with -f/-F, show a persistent right-aligned HUD
+                           on the top row: file name(s), uptime, lines + rate,
+                           error/warn counts. Auto-detects terminal support
+                           (Windows Terminal, iTerm2, kitty, xterm, tmux,
+                           screen). Falls back to no-op on unsupported
+                           terminals (legacy cmd.exe). Set WINTAIL_NO_TUI=1
+                           to force-disable.
+      --tui-force          force --tui even if terminal detection fails
       --exec=CMD           for each line reaching this point, spawn shell
                            CMD with $WINTAIL_LINE and $WINTAIL_SOURCE in env.
                            {} in CMD is replaced with the line literal.
@@ -174,7 +182,7 @@ Filter & display (v0.2):
       --strip-ansi         remove pre-existing ANSI escape codes from input
                            lines (runs first in the pipeline)
   -A, --show-nonprinting   replace control bytes with cat-style glyphs
-                           (^M for CR, ^@ for NUL, ^? for DEL, \xNN otherwise).
+                           (^M for CR, ^@ for NUL, ^? for DEL, \\xNN otherwise).
                            Useful for spotting hidden chars in logs.
   -z, --null-data          treat NUL byte as the input line separator (output
                            still uses newline). Like grep -z.
